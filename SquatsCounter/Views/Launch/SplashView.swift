@@ -5,11 +5,15 @@
 //  Created by Dmitro Kryzhanovsky on 14.11.2025.
 //
 
+//Fix:
+//1. Maybe animations.
+
 import SwiftUI
 
 struct SplashView: View {
     @State var isStart: Bool = false
     @State var isActive: Bool = false
+    @State var isShrink: Bool = false
     @State var logoOffset: CGFloat = 0
     
     @State private var titleText = ""
@@ -40,7 +44,7 @@ struct SplashView: View {
             }
         } else {
             ZStack(alignment: .center) {
-                Color(.primary)
+                Color(AppColors.background)
                 
                 Image(.logo)
                     .resizable()
@@ -48,13 +52,17 @@ struct SplashView: View {
                     .frame(width: 128, height: 128)
                     .offset(y: logoOffset)
                     .animation(.easeOut(duration: 0.8), value: logoOffset)
+                    .scaleEffect(isShrink ? 0 : 1)
+                    .animation(.spring(response: 1.0, dampingFraction: 0.825), value: isShrink)
                 
                 Text(titleText)
-                    .foregroundStyle(Color(.background))
+                    .foregroundStyle(AppColors.textPrimary)
                     .font(.title3)
                     .opacity(isStart ? 1 : 0)
                     .animation(.easeIn(duration: 0.4), value: isStart)
                     .offset(y: 30)
+                    .scaleEffect(isShrink ? 0 : 1)
+                    .animation(.spring(response: 1.0, dampingFraction: 0.825), value: isShrink)
             }
             .ignoresSafeArea()
             .onAppear {
@@ -81,8 +89,14 @@ struct SplashView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.08) {
                 titleText.append(letter)
                 if titleText == fullTitle {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        isActive = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation {
+                            isShrink = true
+                        }
+                        
+                        withAnimation(.easeInOut(duration: 1.5)) {
+                            isActive = true
+                        }
                     }
                 }
             }

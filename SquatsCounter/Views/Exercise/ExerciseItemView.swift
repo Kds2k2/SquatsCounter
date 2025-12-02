@@ -14,11 +14,14 @@ struct ExerciseItemView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(exercise.name)
                 .font(.title2.bold())
+                .foregroundStyle(AppColors.textPrimary)
             
             HStack {
                 Text("Required count:")
                     .fontWeight(.semibold)
+                    .foregroundStyle(AppColors.surface)
                 Text("\(exercise.requiredCount)")
+                    .foregroundStyle(AppColors.surface)
             }
         }
     }

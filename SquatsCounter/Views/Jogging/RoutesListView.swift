@@ -22,12 +22,12 @@ struct RoutesListView: View {
                             .font(.headline)
                         Text("Distance: \(route.distance / 1000, specifier: "%.2f") km")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColors.secondary)
                     }
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color("Background"))
+            .background(AppColors.background)
             .navigationTitle("Your Routes")
             .sheet(item: $selectedRoute) { route in
                 RouteDetailView(route: route)

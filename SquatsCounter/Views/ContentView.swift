@@ -14,6 +14,11 @@ struct ContentView: View {
     
     @State private var showAddExercise = false
     
+    init() {
+        UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: AppColors.textPrimary.uiColor]
+        UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: AppColors.textPrimary.uiColor]
+    }
+    
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             NavigationStack {
@@ -37,7 +42,7 @@ struct ContentView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color("Background"))
+                .background(AppColors.background)
                 .navigationTitle("Exercises")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {

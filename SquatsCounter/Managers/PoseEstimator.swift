@@ -21,8 +21,9 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
     
     private var wasInBottomPosition = false
     private var subscriptions = Set<AnyCancellable>()
+    public var isPaused = false
     
-    init(type: ExerciseType = .pushUps) {
+    init(type: ExerciseType = .pushUps, count: Int = 0) {
         self.type = type
         super.init()
         setupSubscription()
@@ -60,6 +61,8 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
             print("Some error: \(error!.localizedDescription)")
             return
         }
+        
+        guard !isPaused else { return }
         
         guard let bodyPoseResults = request.results as? [VNHumanBodyPoseObservation] else {
             print("Body pose results == nil")

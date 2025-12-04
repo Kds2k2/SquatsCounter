@@ -21,27 +21,7 @@ struct SplashView: View {
     
     var body: some View {
         if (isActive) {
-            TabView {
-                ContentView()
-                    .onAppear {
-                        DispatchQueue.main.async {
-                            KeyboardWarmup.warmupInBackground()
-                        }
-                    }
-                    .tabItem {
-                        Label("Exercises", systemImage: "figure")
-                    }
-                
-                JoggingView()
-                    .tabItem {
-                        Label("Jog", systemImage: "figure.run")
-                    }
-                
-                RoutesListView()
-                    .tabItem {
-                        Label("Routes", systemImage: "map")
-                    }
-            }
+            ContentView()
         } else {
             ZStack(alignment: .center) {
                 Color(AppColors.background)

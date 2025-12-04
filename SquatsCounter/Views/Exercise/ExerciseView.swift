@@ -14,14 +14,15 @@ struct ExerciseView: View {
     @Environment(\.modelContext) private var modelContext
     @ObservedObject var exercise: Exercise
     
-    @StateObject var poseEstimator: PoseEstimator = PoseEstimator()
+    @StateObject var poseEstimator: PoseEstimator
     @State private var isStarted: Bool = false
+    @State private var isPaused: Bool = false
     @State private var isEdit: Bool = false
     @State private var isHide: Bool = false
     
     init(exercise: Exercise) {
         self.exercise = exercise
-        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type))
+        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count))
     }
     
     var body: some View {
@@ -66,43 +67,80 @@ struct ExerciseView: View {
                 }
                 
                 HStack {
-                    Button {
-                        stopExercise()
-                    } label: {
-                        Label("Stop", systemImage: "stop.circle.fill")
-                            .font(.title3.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red.gradient)
-                            .foregroundStyle(AppColors.textPrimary)
-                            .cornerRadius(12)
+                    HStack {
+                        if isPaused {
+                            Button {
+                                stopExercise()
+                            } label: {
+                                Label("Stop", systemImage: "stop.circle.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.red.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                            
+                            Button {
+                                continueExercise()
+                            } label: {
+                                Label("Continue", systemImage: "play.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.green.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                        } else {
+                            Button {
+                                pauseExercise()
+                            } label: {
+                                Label("Pause", systemImage: "pause.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.yellow.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                        }
                     }
                     
                     Button {
                         isHide.toggle()
                     } label: {
-                        Label(isHide ? "Show" : "Hide", systemImage: "figure")
+                        Label("", systemImage: isHide ? "eye.fill" : "eye.slash.fill")
                             .font(.title3.bold())
                             .padding()
-                            .background(Color.green.gradient)
+                            .background(Color.purple.gradient)
                             .foregroundStyle(AppColors.textPrimary)
                             .cornerRadius(12)
                     }
                 }
+                .padding()
+                .background {
+                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black.opacity(0.8), Color.black.opacity(0.5), Color.clear]), startPoint: .bottom, endPoint: .top)
+                        .edgesIgnoringSafeArea(.all)
+                        .frame(height: 300)
+                }
             }
-            .padding()
-            .background {
-                LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black.opacity(0.8), Color.black.opacity(0.5), Color.clear]), startPoint: .bottom, endPoint: .top)
-                    .edgesIgnoringSafeArea(.all)
-                    .frame(height: 300)
+            .ignoresSafeArea()
+            .onAppear {
+                print("LOG0-apper-exer.count:\(exercise.count)")
+                print("LOG0-apper-eposeEstimator.count:\(poseEstimator.count)")
+                
+                poseEstimator.count = exercise.count
+                
+                print("LOG1-apper-exer.count:\(exercise.count)")
+                print("LOG1-apper-poseEstimator.count:\(poseEstimator.count)")
             }
-        }
-        .ignoresSafeArea()
-        .onAppear {
-            poseEstimator.count = exercise.count
-        }
-        .onReceive(poseEstimator.$count) { newCount in
-            updateExerciseCount(newCount)
+            .onReceive(poseEstimator.$count) { newCount in
+                print("LOG2-onReceive-newCount:\(newCount)")
+                if newCount >= exercise.count {
+                    updateExerciseCount(newCount)
+                }
+            }
         }
     }
     
@@ -148,7 +186,7 @@ struct ExerciseView: View {
             .background(AppColors.background)
             
             Button(action: { startExercise() }) {
-                Text("Start Exercise")
+                Text(exercise.isStart ? "Continue Exercise" : "Start Exercise")
                     .foregroundStyle(AppColors.background)
                     .font(.system(size: 20, weight: .semibold))
                     .frame(maxWidth: .infinity)
@@ -157,6 +195,7 @@ struct ExerciseView: View {
                     .background(AppColors.textPrimary)
                     .clipShape(RoundedRectangle(cornerRadius: 30))
             }
+            .disabled(exercise.isDone)
             .padding(.horizontal)
             .safeAreaPadding(.bottom)
         }
@@ -165,6 +204,17 @@ struct ExerciseView: View {
     
     private func startExercise() {
         isStarted = true
+        exercise.isStart = true
+    }
+    
+    private func pauseExercise() {
+        isPaused = true
+        poseEstimator.isPaused = isPaused
+    }
+    
+    private func continueExercise() {
+        isPaused = false
+        poseEstimator.isPaused = isPaused
     }
     
     private func stopExercise() {
@@ -177,10 +227,10 @@ struct ExerciseView: View {
         
         if exercise.count >= exercise.requiredCount {
             exercise.isDone = true
-            exercise.isDoneDate = .now
-            try? modelContext.save()
             isStarted = false
         }
+        
+        try? modelContext.save()
     }
 }
 

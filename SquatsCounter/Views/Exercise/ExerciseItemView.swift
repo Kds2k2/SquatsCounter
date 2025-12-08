@@ -63,6 +63,30 @@ struct ExerciseItemView: View {
                 Text("\(exercise.type.rawValue)")
                     .foregroundStyle(AppColors.surface)
             }
+            
+            HStack {
+                Text("Streak - count:")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppColors.surface)
+                Text("\(exercise.streak?.current)")
+                    .foregroundStyle(AppColors.surface)
+            }
+            
+            HStack {
+                Text("Streak - best:")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppColors.surface)
+                Text("\(exercise.streak?.best)")
+                    .foregroundStyle(AppColors.surface)
+            }
+            
+            HStack {
+                Text("Streak - lastCompleted:")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppColors.surface)
+                Text("\(exercise.streak?.lastCompleted)")
+                    .foregroundStyle(AppColors.surface)
+            }
         }
     }
 }

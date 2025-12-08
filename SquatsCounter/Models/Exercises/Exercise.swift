@@ -21,11 +21,15 @@ final class Exercise: ObservableObject {
     var isDone: Bool = false
     var lastRefresh: Date? = nil
     
+    @Relationship(deleteRule: .cascade)
+    var streak: Streak?
+    
     init(name: String, type: ExerciseType, requiredCount: Int) {
         self.name = name
         self.type = type
         self.requiredCount = requiredCount
         self.lastRefresh = .now
+        self.streak = Streak()
     }
     
     func refresh() {

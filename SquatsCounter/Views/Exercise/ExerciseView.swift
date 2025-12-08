@@ -220,6 +220,7 @@ struct ExerciseView: View {
         
         if exercise.count >= exercise.requiredCount {
             exercise.isDone = true
+            exercise.streak?.recordCompletion()
             isStarted = false
         }
         

@@ -76,6 +76,7 @@ struct ExerciseListView: View {
         
         for exercise in exercises {
             exercise.refresh()
+            exercise.streak?.check()
         }
 
         try? modelContext.save()

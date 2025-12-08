@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		262D095D2EE7248F00FCEFE9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 262A91642E96B2910018AE14 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 262A916B2E96B2910018AE14;
+			remoteInfo = SquatsCounter;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		262A916C2E96B2910018AE14 /* SquatsCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SquatsCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		262D09592EE7248E00FCEFE9 /* SquatsCounterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SquatsCounterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = SquatsCounter;
 			sourceTree = "<group>";
 		};
+		262D095A2EE7248E00FCEFE9 /* SquatsCounterTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SquatsCounterTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		262A91692E96B2910018AE14 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		262D09562EE7248E00FCEFE9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				262A916E2E96B2910018AE14 /* SquatsCounter */,
+				262D095A2EE7248E00FCEFE9 /* SquatsCounterTests */,
 				262A916D2E96B2910018AE14 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				262A916C2E96B2910018AE14 /* SquatsCounter.app */,
+				262D09592EE7248E00FCEFE9 /* SquatsCounterTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 262A916C2E96B2910018AE14 /* SquatsCounter.app */;
 			productType = "com.apple.product-type.application";
 		};
+		262D09582EE7248E00FCEFE9 /* SquatsCounterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 262D095F2EE7248F00FCEFE9 /* Build configuration list for PBXNativeTarget "SquatsCounterTests" */;
+			buildPhases = (
+				262D09552EE7248E00FCEFE9 /* Sources */,
+				262D09562EE7248E00FCEFE9 /* Frameworks */,
+				262D09572EE7248E00FCEFE9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				262D095E2EE7248F00FCEFE9 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				262D095A2EE7248E00FCEFE9 /* SquatsCounterTests */,
+			);
+			name = SquatsCounterTests;
+			packageProductDependencies = (
+			);
+			productName = SquatsCounterTests;
+			productReference = 262D09592EE7248E00FCEFE9 /* SquatsCounterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -77,11 +125,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					262A916B2E96B2910018AE14 = {
 						CreatedOnToolsVersion = 16.4;
+					};
+					262D09582EE7248E00FCEFE9 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 262A916B2E96B2910018AE14;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				262A916B2E96B2910018AE14 /* SquatsCounter */,
+				262D09582EE7248E00FCEFE9 /* SquatsCounterTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		262A916A2E96B2910018AE14 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		262D09572EE7248E00FCEFE9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		262D09552EE7248E00FCEFE9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		262D095E2EE7248F00FCEFE9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 262A916B2E96B2910018AE14 /* SquatsCounter */;
+			targetProxy = 262D095D2EE7248F00FCEFE9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		262A91752E96B2940018AE14 /* Debug */ = {
@@ -322,6 +397,58 @@
 			};
 			name = Release;
 		};
+		262D09602EE7248F00FCEFE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5UM2S2VR73;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = DimaKryzhanovsky.SquatsCounterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquatsCounter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SquatsCounter";
+			};
+			name = Debug;
+		};
+		262D09612EE7248F00FCEFE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5UM2S2VR73;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = DimaKryzhanovsky.SquatsCounterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquatsCounter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SquatsCounter";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -339,6 +466,15 @@
 			buildConfigurations = (
 				262A91782E96B2940018AE14 /* Debug */,
 				262A91792E96B2940018AE14 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		262D095F2EE7248F00FCEFE9 /* Build configuration list for PBXNativeTarget "SquatsCounterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				262D09602EE7248F00FCEFE9 /* Debug */,
+				262D09612EE7248F00FCEFE9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

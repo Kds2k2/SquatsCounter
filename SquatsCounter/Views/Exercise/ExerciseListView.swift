@@ -70,11 +70,9 @@ struct ExerciseListView: View {
     }
     
     private func reset() {
-        print("Reset1")
         let manager = DailyResetManager.shared
         
         guard manager.needsReset() else { return }
-        print("Reset2")
         
         for exercise in exercises {
             exercise.refresh()
@@ -82,7 +80,6 @@ struct ExerciseListView: View {
 
         try? modelContext.save()
         manager.lastReset = Date()
-        print("Reset3")
     }
     
     private func deleteExercises(at offsets: IndexSet, from items: [Exercise]) {

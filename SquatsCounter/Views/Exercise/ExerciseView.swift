@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-//Fix logic
+//1. Animation for change screen 'isStarted'
 
 struct ExerciseView: View {
     
     @Environment(\.modelContext) private var modelContext
+    @StateObject var poseEstimator: PoseEstimator
     @ObservedObject var exercise: Exercise
     
-    @StateObject var poseEstimator: PoseEstimator
     @State private var isStarted: Bool = false
     @State private var isPaused: Bool = false
     @State private var isEdit: Bool = false
@@ -58,10 +58,10 @@ struct ExerciseView: View {
             
             VStack {
                 HStack {
-                    Text("\(exercise.type.rawValue) Counter:")
+                    Text("\(exercise.type.rawValue) reps:")
                         .font(.title)
                         .foregroundStyle(AppColors.textPrimary)
-                    Text(String(exercise.count))
+                    Text("\(exercise.count) / \(exercise.requiredCount)")
                         .font(.title.bold())
                         .foregroundStyle(AppColors.textPrimary)
                 }
@@ -127,16 +127,9 @@ struct ExerciseView: View {
             }
             .ignoresSafeArea()
             .onAppear {
-                print("LOG0-apper-exer.count:\(exercise.count)")
-                print("LOG0-apper-eposeEstimator.count:\(poseEstimator.count)")
-                
                 poseEstimator.count = exercise.count
-                
-                print("LOG1-apper-exer.count:\(exercise.count)")
-                print("LOG1-apper-poseEstimator.count:\(poseEstimator.count)")
             }
             .onReceive(poseEstimator.$count) { newCount in
-                print("LOG2-onReceive-newCount:\(newCount)")
                 if newCount >= exercise.count {
                     updateExerciseCount(newCount)
                 }
@@ -233,132 +226,3 @@ struct ExerciseView: View {
         try? modelContext.save()
     }
 }
-
-//var body: some View {
-//    VStack {
-//        if isStarted {
-//            ZStack(alignment: .bottom) {
-//                GeometryReader { geo in
-//                    FrontCameraView(poseEstimator: poseEstimator)
-//                        .frame(width: geo.size.width, height: geo.size.height)
-//                        .background(Color.red)
-//                        .clipped()
-//                    
-//                    if !isHide {
-//                        StickFigureView(
-//                            postEstimator: poseEstimator,
-//                            size: geo.size,
-//                            exercise: exercise.type
-//                        )
-//                    }
-//                }
-//                
-//                VStack {
-//                    HStack {
-//                        Text("\(exercise.type.rawValue) Counter:")
-//                            .font(.title)
-//                        Text(String(exercise.count))
-//                            .font(.title.bold())
-//                    }
-//                    
-//                    HStack {
-//                        Button {
-//                            stopExercise()
-//                        } label: {
-//                            Label("Stop", systemImage: "stop.circle.fill")
-//                                .font(.title3.bold())
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .background(Color.red.gradient)
-//                                .foregroundColor(.white)
-//                                .cornerRadius(12)
-//                        }
-//                        
-//                        Button {
-//                            isHide.toggle()
-//                        } label: {
-//                            Label("Hide", systemImage: "figure")
-//                                .font(.title3.bold())
-//                                .padding()
-//                                .background(Color.green.gradient)
-//                                .foregroundColor(.white)
-//                                .cornerRadius(12)
-//                        }
-//                    }
-//                }
-//                .padding()
-//                .background(Color.gray.opacity(0.35))
-//            }
-//            .ignoresSafeArea()
-//            .onAppear {
-//                poseEstimator.count = exercise.count
-//            }
-//            .onReceive(poseEstimator.$count) { newCount in
-//                updateExerciseCount(newCount)
-//            }
-//        }
-//        else {
-//            VStack {
-//                Form {
-//                    Section("Edit") {
-//                        TextField("Exercise name", text: $exercise.name)
-//                            .disabled(!isEdit)
-//                        
-//                        Picker("Type", selection: $exercise.type) {
-//                            ForEach(ExerciseType.allCases) { type in
-//                                Text(type.rawValue).tag(type)
-//                            }
-//                        }
-//                        .pickerStyle(.segmented)
-//                        .disabled(!isEdit)
-//                        
-//                        Picker("Repeat count", selection: $exercise.requiredCount)
-//                        {
-//                            ForEach(1...100, id: \.self) { count in
-//                                Text("\(count)").tag(count)
-//                            }
-//                        }
-//                        .pickerStyle(.wheel)
-//                        .disabled(!isEdit)
-//                        
-//                        if isEdit {
-//                            HStack {
-//                                Button("Cancel") {
-//                                    //TODO: ...
-//                                    isEdit = false
-//                                }
-//                                
-//                                Spacer()
-//                                
-//                                Button("Save") {
-//                                    try? modelContext.save()
-//                                    isEdit = false
-//                                    poseEstimator.changeType(exercise.type)
-//                                }
-//                            }
-//                        } else {
-//                            Button("Edit") {
-//                                isEdit = true
-//                            }
-//                        }
-//                    }
-//                }
-//                
-//                Button(action: {
-//                    startExercise()
-//                }) {
-//                    Text("Start Exercise")
-//                        .foregroundStyle(AppColors.background)
-//                        .font(.system(size: 20, weight: .semibold))
-//                        .frame(maxWidth: .infinity)
-//                        .frame(height: 30)
-//                        .padding(15)
-//                        .background(AppColors.textPrimary)
-//                        .clipShape(RoundedRectangle(cornerRadius: 30))
-//                }
-//                .safeAreaPadding(.bottom)
-//            }
-//        }
-//    }
-//    .animation(.easeInOut(duration: 0.3), value: isStarted)
-//}

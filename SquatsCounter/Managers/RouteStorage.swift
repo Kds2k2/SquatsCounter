@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 final class RouteStorage: ObservableObject {
     static let shared = RouteStorage()
@@ -16,7 +17,7 @@ final class RouteStorage: ObservableObject {
             .appendingPathComponent(filename)
     }
     
-    private(set) var routes: [JoggingRoute] = []
+    @Published private(set) var routes: [JoggingRoute] = []
 
     init() {
         load()

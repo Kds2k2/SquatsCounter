@@ -12,23 +12,21 @@ struct ContentView: View {
     var body: some View {
         TabView {
             ExerciseListView()
-                .onAppear {
-                    DispatchQueue.main.async {
-                        KeyboardWarmup.warmupInBackground()
-                    }
-                }
                 .tabItem {
-                    Label("Exercises", systemImage: "figure")
+                    Label(AppString.Exercise.title, systemImage: "figure")
+                }
+                .onAppear {
+                    DispatchQueue.main.async { KeyboardWarmup.warmupInBackground() }
                 }
             
             JoggingView()
                 .tabItem {
-                    Label("Jog", systemImage: "figure.run")
+                    Label(AppString.Jogging.title, systemImage: "figure.run")
                 }
             
             RoutesListView()
                 .tabItem {
-                    Label("Routes", systemImage: "map")
+                    Label(AppString.Route.title, systemImage: "map")
                 }
         }
     }

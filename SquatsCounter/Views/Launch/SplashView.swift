@@ -5,22 +5,18 @@
 //  Created by Dmitro Kryzhanovsky on 14.11.2025.
 //
 
-//Fix:
-//1. Maybe animations.
-
 import SwiftUI
 
 struct SplashView: View {
-    @State var isStart: Bool = false
-    @State var isActive: Bool = false
+    @State var isAnimationStart: Bool = false
+    @State var isAnimationEnd: Bool = false
     @State var isShrink: Bool = false
-    @State var logoOffset: CGFloat = 0
     
+    @State var logoOffset: CGFloat = 0
     @State private var titleText = ""
-    private let fullTitle = "DailyQuest"
     
     var body: some View {
-        if (isActive) {
+        if (isAnimationEnd) {
             ContentView()
         } else {
             ZStack(alignment: .center) {
@@ -38,8 +34,8 @@ struct SplashView: View {
                 Text(titleText)
                     .foregroundStyle(AppColors.textPrimary)
                     .font(.title3)
-                    .opacity(isStart ? 1 : 0)
-                    .animation(.easeIn(duration: 0.4), value: isStart)
+                    .opacity(isAnimationStart ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4), value: isAnimationStart)
                     .offset(y: 30)
                     .scaleEffect(isShrink ? 0 : 1)
                     .animation(.spring(response: 1.0, dampingFraction: 0.825), value: isShrink)
@@ -51,31 +47,31 @@ struct SplashView: View {
         }
     }
     
-    func startAnimation() {
+    private func startAnimation() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             logoOffset = -40
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                isStart = true
-                typeTitle()
+                isAnimationStart = true
+                titleAnimation()
             }
         }
     }
     
-    func typeTitle() {
+    private func titleAnimation() {
         titleText = ""
         
-        for (index, letter) in fullTitle.enumerated() {
+        for (index, letter) in AppString.title.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.08) {
                 titleText.append(letter)
-                if titleText == fullTitle {
+                if titleText == AppString.title {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         withAnimation {
                             isShrink = true
                         }
                         
                         withAnimation(.easeInOut(duration: 1.5)) {
-                            isActive = true
+                            isAnimationEnd = true
                         }
                     }
                 }

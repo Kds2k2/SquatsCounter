@@ -10,29 +10,33 @@ import MapKit
 
 struct JoggingView: View {
     
-    @StateObject var locationManager = LocationManager()
+    @StateObject var joggingManager = JoggingManager()
     @State private var showCongrats = false
     @State private var cameraPosition: MapCameraPosition = .userLocation(followsHeading: true, fallback: .automatic)
     @State private var showSheet = true
     
+    @State private var isStart = false
+    @State private var isPause = false
+    @State private var showStopAlert = false
+    
     var body: some View {
         ZStack {
             Map(position: $cameraPosition) {
-                if locationManager.routeCoordinates.count > 1 {
-                    MapPolyline(coordinates: locationManager.routeCoordinates)
+                if joggingManager.routeCoordinates.count > 1 {
+                    MapPolyline(coordinates: joggingManager.routeCoordinates)
                         .stroke(.blue, lineWidth: 4)
                 }
                 
-                if let first = locationManager.routeCoordinates.first {
+                if let first = joggingManager.routeCoordinates.first {
                     Marker("Start", coordinate: first)
                 }
-                if let last = locationManager.routeCoordinates.last {
+                if let last = joggingManager.routeCoordinates.last {
                     Marker("You", coordinate: last)
                 }
             }
             .mapStyle(.standard)
-            .onChange(of: locationManager.routeCoordinates.count) { _, _ in
-                if let last = locationManager.routeCoordinates.last {
+            .onChange(of: joggingManager.routeCoordinates.count) { _, _ in
+                if let last = joggingManager.routeCoordinates.last {
                     withAnimation {
                         cameraPosition = .region(
                             MKCoordinateRegion(
@@ -57,17 +61,17 @@ struct JoggingView: View {
                 }
             }
         }
-        .onChange(of: locationManager.distance) { old, new in
+        .onChange(of: joggingManager.distance) { old, new in
             if new >= 5000 {
-                locationManager.stopJog()
-                saveRoute()
+                joggingManager.stop()
+                joggingManager.saveRoute()
                 showCongrats = true
             }
         }
         .alert("🎉 Congratulations!", isPresented: $showCongrats) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("You ran \(locationManager.distance / 1000, specifier: "%.2f") km")
+            Text("You ran \(joggingManager.distance / 1000, specifier: "%.2f") km")
         }
     }
 
@@ -103,112 +107,91 @@ struct JoggingView: View {
                 }
             }
             
-            Button(action: {
-                if locationManager.isJogging {
-                    locationManager.stopJog()
-                    saveRoute()
+            HStack {
+                if !isStart {
+                    Button(action: {
+                        joggingManager.start()
+                        isStart = true
+                    }) {
+                        Text("Start")
+                            .foregroundStyle(AppColors.background)
+                            .font(.system(size: 20, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 30)
+                            .padding(15)
+                            .background(AppColors.textPrimary)
+                            .clipShape(RoundedRectangle(cornerRadius: 30))
+                    }
                 } else {
-                    locationManager.startJog()
+                    HStack {
+                        if isPause {
+                            Button {
+                                showStopAlert = true
+                            } label: {
+                                Label("Stop", systemImage: "stop.circle.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.red.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                            .alert("End Jog?", isPresented: $showStopAlert) {
+                                Button("Discard", role: .destructive) {
+                                    joggingManager.stop()
+                                    isPause = false
+                                    isStart = false
+                                }
+                                
+                                Button("Save") {
+                                    joggingManager.saveRoute()
+                                    joggingManager.stop()
+                                    isPause = false
+                                    isStart = false
+                                }
+
+                                Button("Cancel", role: .cancel) { }
+                                
+                            } message: {
+                                Text("Do you want to save this route or discard it?")
+                            }
+                            
+                            Button {
+                                joggingManager.continue()
+                                isPause = false
+                            } label: {
+                                Label("Continue", systemImage: "play.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.green.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                        } else {
+                            Button {
+                                joggingManager.pause()
+                                isPause = true
+                            } label: {
+                                Label("Pause", systemImage: "pause.fill")
+                                    .font(.title3.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.yellow.gradient)
+                                    .foregroundStyle(AppColors.textPrimary)
+                                    .cornerRadius(12)
+                            }
+                        }
+                    }
+
                 }
-            }) {
-                Text(locationManager.isJogging ? "Stop Jog" : "Start Jog")
-                    .foregroundStyle(AppColors.background)
-                    .font(.system(size: 20, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 30)
-                    .padding(15)
-                    .background(AppColors.textPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: 30))
             }
         }
         .padding(.horizontal, 15)
         .safeAreaPadding(.bottom)
-    }
-    
-    private func saveRoute() {
-        guard !locationManager.routeCoordinates.isEmpty else { return }
-
-        let coords = locationManager.routeCoordinates.map {
-            Coordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-        }
-        let route = JoggingRoute(date: .now, distance: locationManager.distance, coordinates: coords)
-        RouteStorage.shared.save(route)
     }
 }
 
 #Preview {
     JoggingView()
 }
-
-//.sheet(isPresented: $showSheet) {
-//    VStack(spacing: 20) {
-//        HStack {
-//            Text("Activity Info")
-//                .font(.title2)
-//                .foregroundStyle(Color(.textPrimary))
-//            
-//            Spacer()
-//            
-//            Button {
-//                //Dismiss
-//            } label: {
-//                Image(systemName: "xmark")
-//                    .font(.system(size: 24, weight: .regular))
-//                    .foregroundStyle(Color(.textPrimary))
-//            }
-//            .padding(10)
-//            .background(.ultraThinMaterial)
-//            .background(Color(.primary).opacity(0.25))
-//            .clipShape(Circle())
-//        }
-//        .padding([.top], 15)
-//        
-//        HStack {
-//            Spacer()
-//            
-//            VStack {
-//                Text("\(locationManager.distance / 1000, specifier: "%.2f") km")
-//                    .font(.title2)
-//                    .foregroundStyle(Color(.textPrimary))
-//            }
-//            .padding(10)
-//            .background(.ultraThinMaterial)
-//            .background(Color(.primary).opacity(0.25))
-//            .clipShape(RoundedRectangle(cornerRadius: 10))
-//
-//            Spacer()
-//            
-//            VStack {
-//                Text("\(locationManager.distance / 1000, specifier: "%.2f") cal")
-//                    .font(.title2)
-//                    .foregroundStyle(Color(.textPrimary))
-//            }
-//            .padding(10)
-//            .background(.ultraThinMaterial)
-//            .background(Color(.primary).opacity(0.25))
-//            .clipShape(RoundedRectangle(cornerRadius: 10))
-//            
-//            Spacer()
-//        }
-//        
-//        Button(locationManager.isJogging ? "Stop Jog" : "Start Jog") {
-//            if locationManager.isJogging {
-//                locationManager.stopJog()
-//                saveRoute()
-//            } else {
-//                locationManager.startJog()
-//            }
-//        }
-//        .foregroundStyle(Color(.textPrimary))
-//        .font(.system(size: 18, weight: .semibold))
-//        .frame(maxWidth: .infinity)
-//        .frame(height: 30)
-//        .padding(10)
-//        .background(.ultraThinMaterial)
-//        .background(Color(.primary).opacity(0.25))
-//        .clipShape(RoundedRectangle(cornerRadius: 30))
-//    }
-//    .padding()
-//    .presentationDetents([.fraction(0.25)])
-//    .presentationDragIndicator(.visible)
-//}

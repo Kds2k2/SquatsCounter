@@ -20,6 +20,7 @@ struct RoutesListView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(route.date.formatted(date: .abbreviated, time: .shortened))
                             .font(.headline)
+                        
                         Text("Distance: \(route.distance / 1000, specifier: "%.2f") km")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.secondary)

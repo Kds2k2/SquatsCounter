@@ -5,7 +5,6 @@
 //  Created by Dmitro Kryzhanovsky on 02.12.2025.
 //
 
-
 import SwiftUI
 
 struct AppColors {

@@ -10,6 +10,7 @@ import CoreLocation
 struct Coordinate2D: Codable {
     let latitude: Double
     let longitude: Double
+    
     var cLLocationCoordinate2D: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
     }

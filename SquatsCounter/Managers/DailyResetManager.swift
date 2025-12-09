@@ -5,6 +5,7 @@
 //  Created by Dmitro Kryzhanovsky on 04.12.2025.
 //
 
+import Foundation
 import SwiftUI
 
 final class DailyResetManager {
@@ -18,6 +19,14 @@ final class DailyResetManager {
     
     func needsReset() -> Bool {
         guard let last = lastReset else { return true }
-        return !Calendar.current.isDateInToday(last)
+
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+
+        let now = Date()
+        let todayStart = calendar.startOfDay(for: now)
+        let lastStart = calendar.startOfDay(for: last)
+
+        return lastStart != todayStart
     }
 }

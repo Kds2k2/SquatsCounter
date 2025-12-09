@@ -17,14 +17,21 @@ final class Streak {
     init() {}
     
     func recordCompletion() {
-        let today = Date()
-        let calendar = Calendar.current
-        
-        if let last = lastCompleted, calendar.isDate(last, inSameDayAs: today) {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+
+        let now = Date()
+        let todayStart = calendar.startOfDay(for: now)
+        let lastStart = lastCompleted.map { calendar.startOfDay(for: $0) }
+
+        // Ignore duplicate completions within the same local day
+        if let last = lastStart, last == todayStart {
             return
         }
         
-        if let last = lastCompleted, calendar.isDate(today, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: last)!) {
+        if let last = lastStart,
+           let nextDay = calendar.date(byAdding: .day, value: 1, to: last),
+           calendar.isDate(todayStart, inSameDayAs: nextDay) {
             current += 1
         } else {
             current = 1
@@ -32,14 +39,19 @@ final class Streak {
         
         if current > best { best = current }
 
-        lastCompleted = today
+        lastCompleted = now
     }
     
     func check() {
-        let today = Date()
-        let calendar = Calendar.current
-        
-        if let last = lastCompleted, !calendar.isDate(today, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: last)!) {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+
+        let todayStart = calendar.startOfDay(for: .now)
+        let lastStart = lastCompleted.map { calendar.startOfDay(for: $0) }
+
+        if let last = lastStart,
+           let nextDay = calendar.date(byAdding: .day, value: 1, to: last),
+           !calendar.isDate(todayStart, inSameDayAs: nextDay) {
             current = 0
         }
     }

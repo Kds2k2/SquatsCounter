@@ -137,4 +137,70 @@ struct SquatsCounterTests {
         #expect(streak.best == 4)
     }
 
+    @Test func exerciseRefreshSetsLastRefreshToNowOnNewDay() {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+        let now = Date()
+
+        let exercise = Exercise(name: "Test", type: .squating, requiredCount: 5)
+        exercise.count = 2
+        exercise.isStart = true
+        exercise.isDone = true
+        exercise.lastRefresh = calendar.date(byAdding: .day, value: -2, to: now)
+
+        exercise.refresh()
+
+        #expect(exercise.count == 0)
+        #expect(exercise.isStart == false)
+        #expect(exercise.isDone == false)
+        #expect(exercise.lastRefresh != nil && abs(exercise.lastRefresh!.timeIntervalSince(now)) < 5)
+    }
+
+    @Test func streakContinuesAcrossLocalMidnight() {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+        let now = Date()
+        let todayStart = calendar.startOfDay(for: now)
+        let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: todayStart)!
+        let yesterdayLate = calendar.date(bySettingHour: 23, minute: 30, second: 0, of: yesterdayStart)!
+
+        let streak = Streak()
+        streak.current = 1
+        streak.best = 1
+        streak.lastCompleted = yesterdayLate
+
+        streak.recordCompletion()
+
+        #expect(streak.current == 2)
+        #expect(streak.best == 2)
+        #expect(streak.lastCompleted != nil && calendar.isDate(streak.lastCompleted!, inSameDayAs: now))
+    }
+
+    @Test func streakStoresActualCompletionTimeNotStartOfDay() {
+        let streak = Streak()
+        let before = Date()
+
+        streak.recordCompletion()
+
+        #expect(streak.lastCompleted != nil)
+        #expect(abs(streak.lastCompleted!.timeIntervalSince(before)) < 5)
+    }
+
+    @Test func dailyResetUsesLocalMidnight() {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
+
+        let manager = DailyResetManager.shared
+        let previous = manager.lastReset
+        defer { manager.lastReset = previous }
+
+        let now = Date()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
+
+        manager.lastReset = yesterday
+        #expect(manager.needsReset() == true)
+
+        manager.lastReset = now
+        #expect(manager.needsReset() == false)
+    }
 }

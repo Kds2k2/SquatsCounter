@@ -6,9 +6,18 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct ExerciseItemView: View {
     var exercise: Exercise
+    
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        formatter.timeZone = .autoupdatingCurrent
+        return formatter
+    }()
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -52,7 +61,7 @@ struct ExerciseItemView: View {
                 Text("lastRefresh:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.lastRefresh)")
+                Text(formatted(exercise.lastRefresh))
                     .foregroundStyle(AppColors.surface)
             }
             
@@ -84,10 +93,15 @@ struct ExerciseItemView: View {
                 Text("Streak - lastCompleted:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.streak?.lastCompleted)")
+                Text(formatted(exercise.streak?.lastCompleted))
                     .foregroundStyle(AppColors.surface)
             }
         }
+    }
+    
+    private func formatted(_ date: Date?) -> String {
+        guard let date else { return "—" }
+        return dateFormatter.string(from: date)
     }
 }
 

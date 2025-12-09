@@ -33,14 +33,18 @@ final class Exercise: ObservableObject {
     }
     
     func refresh() {
-        let today = Date()
-        let calendar = Calendar.current
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .autoupdatingCurrent
 
-        if calendar.isDateDifferentDay(lastRefresh, today) {
+        let now = Date()
+        let todayStart = calendar.startOfDay(for: now)
+        let lastStart = lastRefresh.map { calendar.startOfDay(for: $0) }
+
+        if lastStart != todayStart {
             count = 0
             isStart = false
             isDone = false
-            lastRefresh = today
+            lastRefresh = now
         }
     }
 }

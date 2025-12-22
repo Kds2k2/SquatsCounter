@@ -47,11 +47,7 @@ struct CreateCustomExerciseView: View {
                     StickFigureView(
                         postEstimator: poseEstimator,
                         size: geometry.size,
-                        exercise: .custom(CustomExercise(
-                            name: "Custom",
-                            startState: Angles(leftHand: 0, rightHand: 0, leftLeg: 0, rightLeg: 0),
-                            endState: Angles(leftHand: 0, rightHand: 0, leftLeg: 0, rightLeg: 0)
-                        ))
+                        exercise: .custom
                     )
                     
                     VStack {
@@ -280,8 +276,9 @@ struct CreateCustomExerciseView: View {
         
         let exercise = Exercise(
             name: name,
-            type: .custom(customExercise),
-            requiredCount: repeatCount
+            type: .custom,
+            requiredCount: repeatCount,
+            customExercise: customExercise
         )
         
         modelContext.insert(exercise)

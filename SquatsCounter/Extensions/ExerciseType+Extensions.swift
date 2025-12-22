@@ -12,14 +12,14 @@ extension ExerciseType: CaseIterable {
         [.pushUps, .squating]
     }
     
-    var rawValue: String {
+    var displayName: String {
         switch self {
         case .pushUps:
             return "Push-ups"
         case .squating:
             return "Squats"
-        case .custom(let exercise):
-            return exercise.name
+        case .custom:
+            return "Custom"
         }
     }
 }

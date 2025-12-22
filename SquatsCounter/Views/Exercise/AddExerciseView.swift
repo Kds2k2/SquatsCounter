@@ -23,7 +23,7 @@ struct AddExerciseView: View {
                 
                 Picker("Type", selection: $selectedType) {
                     ForEach(ExerciseType.allCases) { type in
-                        Text(type.rawValue).tag(type)
+                        Text(type.displayName).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -46,7 +46,7 @@ struct AddExerciseView: View {
                     Spacer()
                     
                     Button("Save") {
-                        print("Saved: \(name), \(selectedType.rawValue), \(repeatCount)x")
+                        print("Saved: \(name), \(selectedType.displayName), \(repeatCount)x")
                         
                         let ex = Exercise(name: name, type: selectedType, requiredCount: repeatCount)
                         modelContext.insert(ex)

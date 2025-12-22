@@ -69,7 +69,7 @@ struct ExerciseItemView: View {
                 Text("Type:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.type.rawValue)")
+                Text("\(exercise.type == .custom && exercise.customExercise != nil ? exercise.customExercise!.name : exercise.type.displayName)")
                     .foregroundStyle(AppColors.surface)
             }
             

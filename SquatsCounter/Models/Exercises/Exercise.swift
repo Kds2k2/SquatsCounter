@@ -14,6 +14,9 @@ final class Exercise: ObservableObject {
     
     var type: ExerciseType
     
+    @Relationship(deleteRule: .cascade)
+    var customExercise: CustomExercise?
+    
     var count: Int = 0
     var requiredCount: Int
     
@@ -24,9 +27,10 @@ final class Exercise: ObservableObject {
     @Relationship(deleteRule: .cascade)
     var streak: Streak?
     
-    init(name: String, type: ExerciseType, requiredCount: Int) {
+    init(name: String, type: ExerciseType, requiredCount: Int, customExercise: CustomExercise? = nil) {
         self.name = name
         self.type = type
+        self.customExercise = customExercise
         self.requiredCount = requiredCount
         self.lastRefresh = .now
         self.streak = Streak()

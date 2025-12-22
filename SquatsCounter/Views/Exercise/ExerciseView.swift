@@ -22,7 +22,7 @@ struct ExerciseView: View {
     
     init(exercise: Exercise) {
         self.exercise = exercise
-        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count))
+        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count, customExercise: exercise.customExercise))
     }
     
     var body: some View {
@@ -54,7 +54,7 @@ struct ExerciseView: View {
             
             VStack {
                 HStack {
-                    Text("\(exercise.type.rawValue) reps:")
+                    Text("\(exercise.type == .custom && exercise.customExercise != nil ? exercise.customExercise!.name : exercise.type.displayName) reps:")
                         .font(.title)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("\(exercise.count) / \(exercise.requiredCount)")

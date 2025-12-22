@@ -18,13 +18,15 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
     @Published var count: Int = 0
     
     private var type: ExerciseType = .pushUps
+    private var customExercise: CustomExercise?
     
     private var wasInBottomPosition = false
     private var subscriptions = Set<AnyCancellable>()
     public var isPaused = false
     
-    init(type: ExerciseType = .pushUps, count: Int = 0) {
+    init(type: ExerciseType = .pushUps, count: Int = 0, customExercise: CustomExercise? = nil) {
         self.type = type
+        self.customExercise = customExercise
         super.init()
         setupSubscription()
     }
@@ -41,8 +43,10 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
                     self.countPushUps(bodyParts: bodyParts)
                 case .squating:
                     self.countSquats(bodyParts: bodyParts)
-                case .custom(let data):
-                    self.countCustom(bodyParts: bodyParts, customExercise: data)
+                case .custom:
+                    if let customExercise = self.customExercise {
+                        self.countCustom(bodyParts: bodyParts, customExercise: customExercise)
+                    }
                 }
             })
             .store(in: &subscriptions)

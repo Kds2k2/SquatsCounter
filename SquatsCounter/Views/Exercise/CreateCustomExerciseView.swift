@@ -281,12 +281,6 @@ struct CreateCustomExerciseView: View {
             customExercise: customExercise
         )
         
-        guard exercise.type == .custom && exercise.customExercise != nil else {
-            alertMessage = "Invalid custom exercise configuration"
-            showAlert = true
-            return
-        }
-        
         modelContext.insert(exercise)
         try? modelContext.save()
         

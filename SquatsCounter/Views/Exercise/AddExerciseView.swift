@@ -14,6 +14,7 @@ struct AddExerciseView: View {
     @State private var name = ""
     @State private var selectedType: ExerciseType = .pushUps
     @State private var repeatCount = 10
+    @State private var showCustomExerciseCreation = false
     
     var body: some View {
         NavigationStack {
@@ -36,18 +37,30 @@ struct AddExerciseView: View {
                 .pickerStyle(.wheel)
                 .frame(height: 50)
                 
-                Button("Save") {
-                    print("Saved: \(name), \(selectedType.rawValue), \(repeatCount)x")
+                HStack {
+                    Button("Create Custom") {
+                        showCustomExerciseCreation = true
+                    }
+                    .buttonStyle(.bordered)
                     
-                    let ex = Exercise(name: name, type: selectedType, requiredCount: repeatCount)
-                    modelContext.insert(ex)
-                    try? modelContext.save()
-                    dismiss()
+                    Spacer()
+                    
+                    Button("Save") {
+                        print("Saved: \(name), \(selectedType.rawValue), \(repeatCount)x")
+                        
+                        let ex = Exercise(name: name, type: selectedType, requiredCount: repeatCount)
+                        modelContext.insert(ex)
+                        try? modelContext.save()
+                        dismiss()
+                    }
                 }
             }
             .padding()
             .frame(height: 160)
             .frame(maxWidth: .infinity)
+            .sheet(isPresented: $showCustomExerciseCreation) {
+                CreateCustomExerciseView()
+            }
         }
     }
 }

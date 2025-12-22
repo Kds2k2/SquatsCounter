@@ -66,6 +66,12 @@ struct CreateCustomExerciseView: View {
             } message: {
                 Text(alertMessage)
             }
+            .onChange(of: recorderViewModel.recordedVideoURL) { newURL in
+                guard let url = newURL else { return }
+                setupVideoPlayer(url: url)
+                recorderViewModel.stopSession()
+                state = .reviewing
+            }
             .onDisappear {
                 cleanup()
             }
@@ -127,12 +133,6 @@ struct CreateCustomExerciseView: View {
                 }
             }
         }
-        .onChange(of: recorderViewModel.recordedVideoURL) { _, newURL in
-            if let url = newURL {
-                setupVideoPlayer(url: url)
-                state = .reviewing
-            }
-        }
     }
     
     private var reviewingView: some View {
@@ -189,8 +189,10 @@ struct CreateCustomExerciseView: View {
     
     private func toggleRecording() {
         if recorderViewModel.isRecording {
+            print("LOG: recording")
             recorderViewModel.stopRecording()
         } else {
+            print("LOG: not recording")
             recorderViewModel.startRecording()
         }
     }

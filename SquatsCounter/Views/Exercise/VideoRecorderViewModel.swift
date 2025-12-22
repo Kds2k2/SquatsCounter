@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import AVFoundation
 
-class VideoRecorderViewModel: ObservableObject {
+class VideoRecorderViewModel: NSObject, ObservableObject, AVCaptureFileOutputRecordingDelegate {
     @Published var isRecording = false
     @Published var recordedVideoURL: URL?
     
@@ -19,11 +19,23 @@ class VideoRecorderViewModel: ObservableObject {
     
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
+
+    private var recordingCompletion: ((Result<URL, Error>) -> Void)?
+
+    private func setIsRecording(_ value: Bool) {
+        if Thread.isMainThread {
+            isRecording = value
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.isRecording = value
+            }
+        }
+    }
     
-    init() {
+    override init() {
         captureSession = AVCaptureSession()
-        frontPreviewLayer = AVCaptureVideoPreviewLayer()
-        
+        frontPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        super.init()
         setupCaptureSession()
     }
     
@@ -46,7 +58,6 @@ class VideoRecorderViewModel: ObservableObject {
         }
         captureSession.addOutput(movieFileOutput)
         
-        frontPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         frontPreviewLayer.videoGravity = .resizeAspectFill
         
         rotationCoordinator = .init(device: device, previewLayer: frontPreviewLayer)
@@ -68,55 +79,88 @@ class VideoRecorderViewModel: ObservableObject {
     }
     
     func startSession() {
-        Task.detached { [weak self] in
-            await self?.captureSession.startRunning()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.captureSession.startRunning()
         }
     }
     
     func stopSession() {
-        Task.detached { [weak self] in
-            await self?.captureSession.stopRunning()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.captureSession.stopRunning()
         }
     }
     
     func startRecording() {
-        guard let movieFileOutput = movieFileOutput, !isRecording else { return }
+        guard let movieFileOutput = movieFileOutput, !isRecording else { 
+            print("⚠️ Already recording or no movie file output available")
+            return 
+        }
         
         let tempDir = FileManager.default.temporaryDirectory
         let fileName = UUID().uuidString + ".mov"
         let outputURL = tempDir.appendingPathComponent(fileName)
         
-        movieFileOutput.startRecording(to: outputURL, recordingDelegate: MovieFileOutputDelegate { [weak self] url in
-            DispatchQueue.main.async {
-                self?.recordedVideoURL = url
-                self?.isRecording = false
-            }
-        })
+        recordedVideoURL = nil
         
-        isRecording = true
+        print("🎥 Starting recording to: \(outputURL)")
+
+        recordingCompletion = { [weak self] result in
+            print("🎬 Recording completion called with result")
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let url):
+                    print("✅ Recording completed successfully at: \(url)")
+                    self?.recordedVideoURL = url
+                case .failure(let error):
+                    print("❌ Recording error: \(error.localizedDescription)")
+                    self?.recordedVideoURL = nil
+                }
+                print("🔄 Setting isRecording to false")
+                self?.isRecording = false
+                self?.recordingCompletion = nil
+            }
+        }
+        
+        movieFileOutput.startRecording(to: outputURL, recordingDelegate: self)
+
+        print("🔴 Setting isRecording to true")
+        setIsRecording(true)
     }
     
     func stopRecording() {
+        guard isRecording else { 
+            print("⚠️ Not currently recording, ignoring stop request")
+            return 
+        }
+        print("⏹️ Stopping recording...")
+        setIsRecording(false)
         movieFileOutput?.stopRecording()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            if self?.recordedVideoURL == nil, self?.recordingCompletion != nil {
+                print("⚠️ Recording stop delegate not called, forcing state update")
+                self?.recordingCompletion?(.failure(NSError(domain: "VideoRecorder", code: -1, userInfo: [NSLocalizedDescriptionKey: "Recording failed to complete"])))
+            }
+        }
+    }
+
+    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        print("⏺️ Started recording to \(fileURL)")
+    }
+
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        print("⏹️ Finished recording to \(outputFileURL)")
+        if let error = error {
+            print("❌ Recording error: \(error.localizedDescription)")
+            recordingCompletion?(.failure(error))
+            return
+        }
+        print("✅ Recording completed successfully")
+        recordingCompletion?(.success(outputFileURL))
     }
     
     deinit {
         rotationObservation?.invalidate()
-    }
-}
-
-private class MovieFileOutputDelegate: NSObject, AVCaptureFileOutputRecordingDelegate {
-    private let completion: (URL) -> Void
-    
-    init(completion: @escaping (URL) -> Void) {
-        self.completion = completion
-    }
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        if let error = error {
-            print("Recording error: \(error.localizedDescription)")
-            return
-        }
-        completion(outputFileURL)
+        recordingCompletion = nil
     }
 }

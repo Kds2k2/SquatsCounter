@@ -6,59 +6,40 @@
 //
 
 import SwiftUI
+import AVFoundation
 import Vision
+
+enum CreationState {
+    case recording
+    case reviewing
+}
 
 struct CreateCustomExerciseView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @StateObject private var poseEstimator: PoseEstimator
-    @StateObject private var viewModel: FrontContentViewModel
+    @StateObject private var recorderViewModel = VideoRecorderViewModel()
     
+    @State private var state: CreationState = .recording
     @State private var name = ""
     @State private var repeatCount = 10
-    @State private var startAngles: Angles?
-    @State private var endAngles: Angles?
+    @State private var startTime: Double?
+    @State private var endTime: Double?
+    @State private var currentTime: Double = 0
     @State private var showAlert = false
     @State private var alertMessage = ""
     
-    init() {
-        let estimator = PoseEstimator()
-        _poseEstimator = StateObject(wrappedValue: estimator)
-        _viewModel = StateObject(wrappedValue: FrontContentViewModel(estimator))
-    }
+    @State private var player: AVPlayer?
+    @State private var videoDuration: Double = 0
+    @State private var timeObserver: Any?
     
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                ZStack {
-                    FrontCameraPreviewView(previewLayer: viewModel.frontPreviewLayer)
-                        .onAppear {
-                            Task.detached {
-                                await viewModel.captureSession.startRunning()
-                            }
-                        }
-                        .onDisappear {
-                            Task.detached {
-                                await viewModel.captureSession.stopRunning()
-                            }
-                        }
-                    
-                    StickFigureView(
-                        postEstimator: poseEstimator,
-                        size: geometry.size,
-                        exercise: .custom
-                    )
-                    
-                    VStack {
-                        Spacer()
-                        
-                        controlsPanel
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .padding()
-                    }
+            ZStack {
+                if state == .recording {
+                    recordingView
+                } else {
+                    reviewingView
                 }
             }
             .ignoresSafeArea()
@@ -67,14 +48,17 @@ struct CreateCustomExerciseView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
+                        cleanup()
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveExercise()
+                if state == .reviewing {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            saveExercise()
+                        }
+                        .disabled(!canSave)
                     }
-                    .disabled(!canSave)
                 }
             }
             .alert("Invalid Input", isPresented: $showAlert) {
@@ -82,143 +66,253 @@ struct CreateCustomExerciseView: View {
             } message: {
                 Text(alertMessage)
             }
+            .onDisappear {
+                cleanup()
+            }
         }
     }
     
-    private var controlsPanel: some View {
-        VStack(spacing: 16) {
-            TextField("Exercise name", text: $name)
-                .textFieldStyle(.roundedBorder)
+    private var recordingView: some View {
+        ZStack {
+            FrontCameraPreviewView(previewLayer: recorderViewModel.frontPreviewLayer)
+                .onAppear {
+                    recorderViewModel.startSession()
+                }
             
-            HStack {
-                Text("Repeat count:")
+            VStack {
                 Spacer()
-                Picker("Repeat count", selection: $repeatCount) {
-                    ForEach(1...100, id: \.self) { count in
-                        Text("\(count)").tag(count)
+                
+                HStack {
+                    Spacer()
+                    
+                    Button(action: toggleRecording) {
+                        ZStack {
+                            Circle()
+                                .fill(recorderViewModel.isRecording ? Color.red : Color.white)
+                                .frame(width: 70, height: 70)
+                            
+                            if recorderViewModel.isRecording {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.white)
+                                    .frame(width: 30, height: 30)
+                            } else {
+                                Circle()
+                                    .stroke(Color.gray, lineWidth: 4)
+                                    .frame(width: 60, height: 60)
+                            }
+                        }
                     }
+                    
+                    Spacer()
                 }
-                .pickerStyle(.menu)
+                .padding(.bottom, 50)
             }
             
-            Divider()
-            
-            VStack(spacing: 12) {
-                Button(action: captureStartPosition) {
+            if recorderViewModel.isRecording {
+                VStack {
                     HStack {
-                        Image(systemName: startAngles == nil ? "1.circle" : "checkmark.circle.fill")
-                        Text("Capture Start Position")
-                        Spacer()
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 12, height: 12)
+                        Text("Recording")
+                            .foregroundColor(.red)
+                            .fontWeight(.semibold)
                     }
-                    .foregroundColor(startAngles == nil ? .primary : .green)
+                    .padding(12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(20)
+                    .padding(.top, 60)
+                    
+                    Spacer()
                 }
-                .buttonStyle(.bordered)
-                .disabled(!hasValidPose)
-                
-                if let angles = startAngles {
-                    anglesDisplay(angles, title: "Start")
-                        .font(.caption)
-                }
-                
-                Button(action: captureEndPosition) {
-                    HStack {
-                        Image(systemName: endAngles == nil ? "2.circle" : "checkmark.circle.fill")
-                        Text("Capture End Position")
-                        Spacer()
-                    }
-                    .foregroundColor(endAngles == nil ? .primary : .green)
-                }
-                .buttonStyle(.bordered)
-                .disabled(!hasValidPose)
-                
-                if let angles = endAngles {
-                    anglesDisplay(angles, title: "End")
-                        .font(.caption)
-                }
+            }
+        }
+        .onChange(of: recorderViewModel.recordedVideoURL) { _, newURL in
+            if let url = newURL {
+                setupVideoPlayer(url: url)
+                state = .reviewing
             }
         }
     }
     
-    private func anglesDisplay(_ angles: Angles, title: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(title) Position:")
-                .fontWeight(.semibold)
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("L Hand: \(Int(angles.leftHand))°")
-                    Text("R Hand: \(Int(angles.rightHand))°")
+    private var reviewingView: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                if let player = player {
+                    VideoPlayerView(player: player)
+                        .frame(height: geometry.size.height * 0.5)
+                } else {
+                    Rectangle()
+                        .fill(Color.black)
+                        .frame(height: geometry.size.height * 0.5)
                 }
-                Spacer()
-                VStack(alignment: .leading) {
-                    Text("L Leg: \(Int(angles.leftLeg))°")
-                    Text("R Leg: \(Int(angles.rightLeg))°")
+                
+                VStack(spacing: 16) {
+                    if let videoURL = recorderViewModel.recordedVideoURL {
+                        VideoTimelineView(
+                            videoURL: videoURL,
+                            videoDuration: videoDuration,
+                            startTime: $startTime,
+                            endTime: $endTime,
+                            currentTime: $currentTime,
+                            onSeek: seekTo
+                        )
+                    }
+                    
+                    Divider()
+                    
+                    VStack(spacing: 12) {
+                        TextField("Exercise name", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                        
+                        HStack {
+                            Text("Repeat count:")
+                            Spacer()
+                            Picker("Repeat count", selection: $repeatCount) {
+                                ForEach(1...100, id: \.self) { count in
+                                    Text("\(count)").tag(count)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
+                    }
+                    .padding()
                 }
+                .background(Color(UIColor.systemBackground))
             }
         }
-        .padding(8)
-        .background(Color.secondary.opacity(0.1))
-        .cornerRadius(8)
-    }
-    
-    private var hasValidPose: Bool {
-        !poseEstimator.bodyParts.isEmpty &&
-        poseEstimator.bodyParts[.leftShoulder] != nil &&
-        poseEstimator.bodyParts[.rightShoulder] != nil &&
-        poseEstimator.bodyParts[.leftElbow] != nil &&
-        poseEstimator.bodyParts[.rightElbow] != nil &&
-        poseEstimator.bodyParts[.leftWrist] != nil &&
-        poseEstimator.bodyParts[.rightWrist] != nil &&
-        poseEstimator.bodyParts[.leftHip] != nil &&
-        poseEstimator.bodyParts[.rightHip] != nil &&
-        poseEstimator.bodyParts[.leftKnee] != nil &&
-        poseEstimator.bodyParts[.rightKnee] != nil &&
-        poseEstimator.bodyParts[.leftAnkle] != nil &&
-        poseEstimator.bodyParts[.rightAnkle] != nil &&
-        poseEstimator.bodyParts[.root] != nil &&
-        poseEstimator.bodyParts[.neck] != nil &&
-        poseEstimator.bodyParts[.nose] != nil
     }
     
     private var canSave: Bool {
-        !name.isEmpty && startAngles != nil && endAngles != nil
+        !name.isEmpty && startTime != nil && endTime != nil
     }
     
-    private func captureStartPosition() {
-        guard hasValidPose else { return }
-        startAngles = calculateCurrentAngles()
+    private func toggleRecording() {
+        if recorderViewModel.isRecording {
+            recorderViewModel.stopRecording()
+        } else {
+            recorderViewModel.startRecording()
+        }
     }
     
-    private func captureEndPosition() {
-        guard hasValidPose else { return }
-        endAngles = calculateCurrentAngles()
+    private func setupVideoPlayer(url: URL) {
+        let asset = AVAsset(url: url)
+        let playerItem = AVPlayerItem(asset: asset)
+        player = AVPlayer(playerItem: playerItem)
+        
+        Task {
+            do {
+                let duration = try await asset.load(.duration)
+                await MainActor.run {
+                    videoDuration = CMTimeGetSeconds(duration)
+                }
+            } catch {
+                print("Failed to load video duration: \(error)")
+            }
+        }
+        
+        let interval = CMTime(seconds: 0.05, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
+            currentTime = CMTimeGetSeconds(time)
+        }
     }
     
-    private func calculateCurrentAngles() -> Angles {
-        let bodyParts = poseEstimator.bodyParts
+    private func seekTo(_ time: Double) {
+        let cmTime = CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        player?.pause()
+    }
+    
+    private func saveExercise() {
+        guard let start = startTime, let end = endTime else {
+            alertMessage = "Please set both start and end times"
+            showAlert = true
+            return
+        }
         
-        let leftHandAngle = calculateAngle(
-            p1: bodyParts[.leftElbow]!,
-            p2: bodyParts[.leftShoulder]!,
-            p3: bodyParts[.leftWrist]!
-        )
+        guard !name.isEmpty else {
+            alertMessage = "Please enter an exercise name"
+            showAlert = true
+            return
+        }
         
-        let rightHandAngle = calculateAngle(
-            p1: bodyParts[.rightElbow]!,
-            p2: bodyParts[.rightShoulder]!,
-            p3: bodyParts[.rightWrist]!
-        )
+        guard let videoURL = recorderViewModel.recordedVideoURL else {
+            alertMessage = "Video not available"
+            showAlert = true
+            return
+        }
         
-        let leftLegAngle = calculateAngle(
-            p1: bodyParts[.leftKnee]!,
-            p2: bodyParts[.leftHip]!,
-            p3: bodyParts[.leftAnkle]!
-        )
+        if abs(start - end) < 0.5 {
+            alertMessage = "Start and end times are too close. Please choose more distinct times."
+            showAlert = true
+            return
+        }
         
-        let rightLegAngle = calculateAngle(
-            p1: bodyParts[.rightKnee]!,
-            p2: bodyParts[.rightHip]!,
-            p3: bodyParts[.rightAnkle]!
-        )
+        Task {
+            do {
+                let startAngles = try await extractAngles(from: videoURL, at: start)
+                let endAngles = try await extractAngles(from: videoURL, at: end)
+                
+                await MainActor.run {
+                    let customExercise = CustomExercise(
+                        name: name,
+                        startState: startAngles,
+                        endState: endAngles
+                    )
+                    
+                    let exercise = Exercise(
+                        name: name,
+                        type: .custom,
+                        requiredCount: repeatCount,
+                        customExercise: customExercise
+                    )
+                    
+                    modelContext.insert(exercise)
+                    try? modelContext.save()
+                    
+                    cleanup()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    alertMessage = "Failed to extract poses from video: \(error.localizedDescription)"
+                    showAlert = true
+                }
+            }
+        }
+    }
+    
+    private func extractAngles(from videoURL: URL, at time: Double) async throws -> Angles {
+        let asset = AVAsset(url: videoURL)
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+        imageGenerator.requestedTimeToleranceBefore = .zero
+        imageGenerator.requestedTimeToleranceAfter = .zero
+        
+        let cmTime = CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        let cgImage = try imageGenerator.copyCGImage(at: cmTime, actualTime: nil)
+        
+        let bodyParts = try await detectPose(in: cgImage)
+        
+        guard let leftShoulder = bodyParts[.leftShoulder],
+              let rightShoulder = bodyParts[.rightShoulder],
+              let leftElbow = bodyParts[.leftElbow],
+              let rightElbow = bodyParts[.rightElbow],
+              let leftWrist = bodyParts[.leftWrist],
+              let rightWrist = bodyParts[.rightWrist],
+              let leftHip = bodyParts[.leftHip],
+              let rightHip = bodyParts[.rightHip],
+              let leftKnee = bodyParts[.leftKnee],
+              let rightKnee = bodyParts[.rightKnee],
+              let leftAnkle = bodyParts[.leftAnkle],
+              let rightAnkle = bodyParts[.rightAnkle] else {
+            throw NSError(domain: "CreateCustomExerciseView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not detect all required body parts"])
+        }
+        
+        let leftHandAngle = calculateAngle(p1: leftElbow, p2: leftShoulder, p3: leftWrist)
+        let rightHandAngle = calculateAngle(p1: rightElbow, p2: rightShoulder, p3: rightWrist)
+        let leftLegAngle = calculateAngle(p1: leftKnee, p2: leftHip, p3: leftAnkle)
+        let rightLegAngle = calculateAngle(p1: rightKnee, p2: rightHip, p3: rightAnkle)
         
         return Angles(
             leftHand: leftHandAngle,
@@ -226,6 +320,36 @@ struct CreateCustomExerciseView: View {
             leftLeg: leftLegAngle,
             rightLeg: rightLegAngle
         )
+    }
+    
+    private func detectPose(in image: CGImage) async throws -> [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] {
+        let request = VNDetectHumanBodyPoseRequest()
+        let handler = VNImageRequestHandler(cgImage: image, options: [:])
+        
+        try handler.perform([request])
+        
+        guard let observation = request.results?.first else {
+            throw NSError(domain: "CreateCustomExerciseView", code: 2, userInfo: [NSLocalizedDescriptionKey: "No pose detected"])
+        }
+        
+        var bodyParts: [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] = [:]
+        
+        let joints: [VNHumanBodyPoseObservation.JointName] = [
+            .leftShoulder, .rightShoulder,
+            .leftElbow, .rightElbow,
+            .leftWrist, .rightWrist,
+            .leftHip, .rightHip,
+            .leftKnee, .rightKnee,
+            .leftAnkle, .rightAnkle
+        ]
+        
+        for joint in joints {
+            if let point = try? observation.recognizedPoint(joint), point.confidence > 0.5 {
+                bodyParts[joint] = point
+            }
+        }
+        
+        return bodyParts
     }
     
     private func calculateAngle(p1: VNRecognizedPoint, p2: VNRecognizedPoint, p3: VNRecognizedPoint) -> CGFloat {
@@ -249,49 +373,13 @@ struct CreateCustomExerciseView: View {
         return angle
     }
     
-    private func saveExercise() {
-        guard let start = startAngles, let end = endAngles else {
-            alertMessage = "Please capture both start and end positions"
-            showAlert = true
-            return
+    private func cleanup() {
+        if let observer = timeObserver {
+            player?.removeTimeObserver(observer)
+            timeObserver = nil
         }
-        
-        guard !name.isEmpty else {
-            alertMessage = "Please enter an exercise name"
-            showAlert = true
-            return
-        }
-        
-        if areTooSimilar(start, end) {
-            alertMessage = "Start and end positions are too similar. Please choose more distinct positions."
-            showAlert = true
-            return
-        }
-        
-        let customExercise = CustomExercise(
-            name: name,
-            startState: start,
-            endState: end
-        )
-        
-        let exercise = Exercise(
-            name: name,
-            type: .custom,
-            requiredCount: repeatCount,
-            customExercise: customExercise
-        )
-        
-        modelContext.insert(exercise)
-        try? modelContext.save()
-        
-        dismiss()
-    }
-    
-    private func areTooSimilar(_ a1: Angles, _ a2: Angles) -> Bool {
-        let threshold: CGFloat = 10
-        return abs(a1.leftHand - a2.leftHand) < threshold &&
-               abs(a1.rightHand - a2.rightHand) < threshold &&
-               abs(a1.leftLeg - a2.leftLeg) < threshold &&
-               abs(a1.rightLeg - a2.rightLeg) < threshold
+        player?.pause()
+        player = nil
+        recorderViewModel.stopSession()
     }
 }

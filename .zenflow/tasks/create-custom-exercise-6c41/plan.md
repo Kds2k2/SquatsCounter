@@ -75,3 +75,9 @@ This SIGABRT is a SwiftData runtime crash, not a threading issue.
 The problem is ExerciseType is not persistable by SwiftData in its current form. 
 
 Make enum simple, Store custom exercise separately, Update Exercise with CustomExercise?
+
+### [x] Step: Update CreateCustomExerciseView
+<!-- chat-id: 9b912e23-5a43-43ab-bf1e-7744a1e98672 -->
+<!-- agent: ZEN_CLI -->
+
+I want that in view user record video, then save it. Then right after it choose time on duration to create angel states.

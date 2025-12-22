@@ -64,3 +64,14 @@ Implement the task according to the technical specification and general engineer
    - What was implemented
    - How the solution was tested
    - The biggest issues or challenges encountered
+
+
+### [x] Step: Refactor ExerciseType
+<!-- chat-id: dd58320c-97b2-496a-b2d4-f3316b9735ff -->
+<!-- agent: ZEN_CLI -->
+
+Error: Thread 1: signal SIGABRT
+This SIGABRT is a SwiftData runtime crash, not a threading issue.
+The problem is ExerciseType is not persistable by SwiftData in its current form. 
+
+Make enum simple, Store custom exercise separately, Update Exercise with CustomExercise?

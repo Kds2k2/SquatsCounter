@@ -22,7 +22,7 @@ struct ExerciseView: View {
     
     init(exercise: Exercise) {
         self.exercise = exercise
-        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count))
+        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count, customExercise: exercise.customExercise))
     }
     
     var body: some View {
@@ -54,7 +54,7 @@ struct ExerciseView: View {
             
             VStack {
                 HStack {
-                    Text("\(exercise.type.rawValue) reps:")
+                    Text("\(exercise.displayName) reps:")
                         .font(.title)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("\(exercise.count) / \(exercise.requiredCount)")
@@ -142,7 +142,7 @@ struct ExerciseView: View {
                     
                     Picker("Type", selection: $exercise.type) {
                         ForEach(ExerciseType.allCases) { type in
-                            Text(type.rawValue).tag(type)
+                            Text(type.displayName).tag(type)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -163,7 +163,7 @@ struct ExerciseView: View {
                             Button("Save") {
                                 try? modelContext.save()
                                 isEdit = false
-                                poseEstimator.changeType(exercise.type)
+                                poseEstimator.changeType(exercise.type, customExercise: exercise.customExercise)
                             }
                         }
                     } else {

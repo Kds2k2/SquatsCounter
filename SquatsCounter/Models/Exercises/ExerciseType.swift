@@ -6,21 +6,15 @@
 //
 
 import Foundation
+import SwiftData
 
-enum ExerciseType: Codable, Identifiable, Comparable, Hashable {
+enum ExerciseType: String, Codable, Identifiable, Comparable, Hashable {
     case pushUps
     case squating
-    case custom(CustomExercise)
+    case custom
 
     var id: String {
-        switch self {
-        case .pushUps:
-            return "pushUps"
-        case .squating:
-            return "squating"
-        case .custom(let exercise):
-            return "custom-\(exercise.id)"
-        }
+        return self.rawValue
     }
 
     static func < (lhs: ExerciseType, rhs: ExerciseType) -> Bool {
@@ -36,12 +30,23 @@ enum ExerciseType: Codable, Identifiable, Comparable, Hashable {
     }
 }
 
-struct CustomExercise: Codable, Identifiable, Equatable, Hashable {
+@Model
+final class CustomExercise {
     var id: UUID = UUID()
     var name: String
 
     var startState: Angles
     var endState: Angles
+    
+    @Relationship(inverse: \Exercise.customExercise)
+    var exercise: Exercise?
+    
+    init(name: String, startState: Angles, endState: Angles) {
+        self.id = UUID()
+        self.name = name
+        self.startState = startState
+        self.endState = endState
+    }
 }
 
 struct Angles: Codable, Equatable, Hashable {

@@ -26,7 +26,7 @@ struct ExerciseListView: View {
                     ForEach(ExerciseType.allCases) { type in
                         let items = exercises.filter { $0.type == type }
                         if !items.isEmpty {
-                            Section(type.rawValue) {
+                            Section(type.displayName) {
                                 ForEach(items) { exercise in
                                     NavigationLink {
                                         ExerciseView(exercise: exercise)
@@ -41,10 +41,7 @@ struct ExerciseListView: View {
                         }
                     }
                     
-                    let customExercises = exercises.filter { 
-                        if case .custom = $0.type { return true }
-                        return false
-                    }
+                    let customExercises = exercises.filter { $0.type == .custom }
                     if !customExercises.isEmpty {
                         Section("Custom Exercises") {
                             ForEach(customExercises) { exercise in

@@ -12,7 +12,7 @@ struct CreateCustomExerciseView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @StateObject private var poseEstimator = PoseEstimator()
+    @StateObject private var poseEstimator: PoseEstimator
     @StateObject private var viewModel: FrontContentViewModel
     
     @State private var name = ""
@@ -47,7 +47,11 @@ struct CreateCustomExerciseView: View {
                     StickFigureView(
                         postEstimator: poseEstimator,
                         size: geometry.size,
-                        exercise: .squating
+                        exercise: .custom(CustomExercise(
+                            name: "Custom",
+                            startState: Angles(leftHand: 0, rightHand: 0, leftLeg: 0, rightLeg: 0),
+                            endState: Angles(leftHand: 0, rightHand: 0, leftLeg: 0, rightLeg: 0)
+                        ))
                     )
                     
                     VStack {
@@ -173,7 +177,10 @@ struct CreateCustomExerciseView: View {
         poseEstimator.bodyParts[.leftKnee] != nil &&
         poseEstimator.bodyParts[.rightKnee] != nil &&
         poseEstimator.bodyParts[.leftAnkle] != nil &&
-        poseEstimator.bodyParts[.rightAnkle] != nil
+        poseEstimator.bodyParts[.rightAnkle] != nil &&
+        poseEstimator.bodyParts[.root] != nil &&
+        poseEstimator.bodyParts[.neck] != nil &&
+        poseEstimator.bodyParts[.nose] != nil
     }
     
     private var canSave: Bool {
@@ -266,6 +273,7 @@ struct CreateCustomExerciseView: View {
         }
         
         let customExercise = CustomExercise(
+            name: name,
             startState: start,
             endState: end
         )

@@ -19,7 +19,7 @@ extension ExerciseType: CaseIterable {
         case .squating:
             return "Squats"
         case .custom(let exercise):
-            return "Custom-\(exercise.id)"
+            return exercise.name
         }
     }
 }

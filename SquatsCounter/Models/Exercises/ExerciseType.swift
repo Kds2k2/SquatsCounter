@@ -38,6 +38,7 @@ enum ExerciseType: Codable, Identifiable, Comparable, Hashable {
 
 struct CustomExercise: Codable, Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
+    var name: String
 
     var startState: Angles
     var endState: Angles

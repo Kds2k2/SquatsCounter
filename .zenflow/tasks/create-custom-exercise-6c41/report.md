@@ -29,6 +29,7 @@ Successfully implemented a complete custom exercise creation feature for the Squ
 2. **SquatsCounter/Models/Exercises/ExerciseType.swift**
    - Added `Hashable` conformance to `ExerciseType`, `CustomExercise`, and `Angles`
    - Required for SwiftUI Picker compatibility
+   - Added `name: String` field to `CustomExercise` for user-friendly display names
 
 3. **SquatsCounter/Views/StickVigure/StickFigureView.swift**
    - Added `.custom` case handling in switch statement
@@ -110,6 +111,28 @@ Potential improvements not included in this implementation:
 - Add haptic feedback on successful captures
 - Support for custom tolerance values per exercise
 
+## Post-Implementation Fixes
+
+After initial code review, several critical issues were identified and fixed:
+
+### Fix #1: Incorrect Exercise Type in StickFigureView
+**Problem**: The StickFigureView was hardcoded to use `.squating` exercise type instead of `.custom`  
+**Fix**: Changed to `.custom(CustomExercise(...))` with dummy data to properly display full-body stick figure overlay for custom exercises
+
+### Fix #2: Duplicate PoseEstimator Instance
+**Problem**: Two PoseEstimator instances were created - one on line 15 that was immediately replaced by another in the init()  
+**Fix**: Removed the initialization on property declaration, keeping only the init() initialization
+
+### Fix #3: Potential Crash in fullBodyView()
+**Problem**: `fullBodyView()` used force unwrapping for `.root`, `.neck`, and `.nose` body parts without validation  
+**Fix**: Added checks for `.root`, `.neck`, and `.nose` to the `hasValidPose` computed property to prevent crashes
+
+### Fix #4: Poor Custom Exercise Display Names
+**Problem**: Custom exercises showed "Custom-{UUID}" instead of user-provided names  
+**Fix**: Added `name: String` field to `CustomExercise` struct and updated `rawValue` to return `exercise.name` for custom exercises
+
+All fixes have been verified with a successful build.
+
 ## Summary
 
-The custom exercise creation feature has been successfully implemented and integrated into the SquatsCounter app. Users can now create personalized exercises by capturing their start and end positions using the front camera and pose detection. The implementation maintains code quality, follows existing patterns, and builds without errors.
+The custom exercise creation feature has been successfully implemented and integrated into the SquatsCounter app. Users can now create personalized exercises by capturing their start and end positions using the front camera and pose detection. The implementation has been reviewed and all critical issues have been addressed. The feature is ready for testing.

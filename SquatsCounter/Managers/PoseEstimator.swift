@@ -227,8 +227,9 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         return angle
     }
     
-    func changeType(_ newType: ExerciseType) {
+    func changeType(_ newType: ExerciseType, customExercise: CustomExercise? = nil) {
         self.type = newType
+        self.customExercise = customExercise
         wasInBottomPosition = false
         setupSubscription()
         

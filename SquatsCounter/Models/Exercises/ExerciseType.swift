@@ -38,6 +38,9 @@ final class CustomExercise {
     var startState: Angles
     var endState: Angles
     
+    @Relationship(inverse: \Exercise.customExercise)
+    var exercise: Exercise?
+    
     init(name: String, startState: Angles, endState: Angles) {
         self.id = UUID()
         self.name = name

@@ -36,6 +36,10 @@ final class Exercise: ObservableObject {
         self.streak = Streak()
     }
     
+    var displayName: String {
+        customExercise?.name ?? type.displayName
+    }
+    
     func refresh() {
         var calendar = Calendar.autoupdatingCurrent
         calendar.timeZone = .autoupdatingCurrent

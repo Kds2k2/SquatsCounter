@@ -19,6 +19,11 @@ struct ContentView: View {
                     DispatchQueue.main.async { KeyboardWarmup.warmupInBackground() }
                 }
             
+            QuestListView()
+                .tabItem {
+                    Label(AppString.Quests.title, systemImage: "checklist")
+                }
+            
             JoggingView()
                 .tabItem {
                     Label(AppString.Jogging.title, systemImage: "figure.run")

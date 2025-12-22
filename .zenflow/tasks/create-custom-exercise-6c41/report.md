@@ -35,6 +35,10 @@ Successfully implemented a complete custom exercise creation feature for the Squ
    - Added `.custom` case handling in switch statement
    - Implemented `fullBodyView()` method for custom exercise visualization
 
+4. **SquatsCounter/Views/Exercise/ExerciseListView.swift**
+   - Added separate "Custom Exercises" section to display custom exercises
+   - Custom exercises now appear in the list alongside predefined exercises
+
 ## Key Features
 
 - **Live Camera Preview**: Real-time front camera feed with pose detection overlay
@@ -130,6 +134,11 @@ After initial code review, several critical issues were identified and fixed:
 ### Fix #4: Poor Custom Exercise Display Names
 **Problem**: Custom exercises showed "Custom-{UUID}" instead of user-provided names  
 **Fix**: Added `name: String` field to `CustomExercise` struct and updated `rawValue` to return `exercise.name` for custom exercises
+
+### Fix #5: Custom Exercises Not Appearing in List (CRITICAL)
+**Problem**: ExerciseListView only iterated through `ExerciseType.allCases` (`.pushUps` and `.squating`), so custom exercises never appeared in the list  
+**Fix**: Added a separate "Custom Exercises" section that filters and displays all exercises with `.custom` type
+**Impact**: Without this fix, users could create custom exercises but would never see them in the exercise list
 
 All fixes have been verified with a successful build.
 

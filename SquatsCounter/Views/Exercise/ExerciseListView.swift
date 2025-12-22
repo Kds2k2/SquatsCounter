@@ -40,6 +40,25 @@ struct ExerciseListView: View {
                             }
                         }
                     }
+                    
+                    let customExercises = exercises.filter { 
+                        if case .custom = $0.type { return true }
+                        return false
+                    }
+                    if !customExercises.isEmpty {
+                        Section("Custom Exercises") {
+                            ForEach(customExercises) { exercise in
+                                NavigationLink {
+                                    ExerciseView(exercise: exercise)
+                                } label: {
+                                    ExerciseItemView(exercise: exercise)
+                                }
+                            }
+                            .onDelete { indexSet in
+                                deleteExercises(at: indexSet, from: customExercises)
+                            }
+                        }
+                    }
                 }
                 .scrollContentBackground(.hidden)
                 .background(AppColors.background)

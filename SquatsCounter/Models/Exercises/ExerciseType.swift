@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ExerciseType: Codable, Identifiable, Comparable {
+enum ExerciseType: Codable, Identifiable, Comparable, Hashable {
     case pushUps
     case squating
     case custom(CustomExercise)
@@ -36,14 +36,15 @@ enum ExerciseType: Codable, Identifiable, Comparable {
     }
 }
 
-struct CustomExercise: Codable, Identifiable, Equatable {
+struct CustomExercise: Codable, Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
+    var name: String
 
     var startState: Angles
     var endState: Angles
 }
 
-struct Angles: Codable, Equatable {
+struct Angles: Codable, Equatable, Hashable {
     var leftHand: CGFloat
     var rightHand: CGFloat
     var leftLeg: CGFloat

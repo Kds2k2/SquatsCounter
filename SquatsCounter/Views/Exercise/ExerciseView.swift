@@ -48,11 +48,7 @@ struct ExerciseView: View {
                     .clipped()
                 
                 if !isHide {
-                    StickFigureView(
-                        postEstimator: poseEstimator,
-                        size: geo.size,
-                        exercise: exercise.type
-                    )
+                    StickFigureView(postEstimator: poseEstimator, size: geo.size, exercise: exercise.type)
                 }
             }
             

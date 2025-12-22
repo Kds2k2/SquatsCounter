@@ -41,6 +41,8 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
                     self.countPushUps(bodyParts: bodyParts)
                 case .squating:
                     self.countSquats(bodyParts: bodyParts)
+                case .custom(let data):
+                    self.countCustom(bodyParts: bodyParts, customExercise: data)
                 }
             })
             .store(in: &subscriptions)
@@ -70,7 +72,7 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         }
         
         guard let bodyParts = try? bodyPoseResults.first?.recognizedPoints(.all) else {
-            //print("Body parts == nil")
+            print("Body parts == nil")
             return
         }
         
@@ -127,6 +129,79 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         }
     }
     
+    func countCustom(bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint], customExercise: CustomExercise) {
+        let tolerance: CGFloat = 5
+
+        guard
+            // R HAND
+            let rightShoulder = bodyParts[.rightShoulder],
+            let rightElbow = bodyParts[.rightElbow],
+            let rightWrist = bodyParts[.rightWrist],
+
+            // L HAND
+            let leftShoulder = bodyParts[.leftShoulder],
+            let leftElbow = bodyParts[.leftElbow],
+            let leftWrist = bodyParts[.leftWrist],
+
+            // R LEG
+            let rightHip = bodyParts[.rightHip],
+            let rightKnee = bodyParts[.rightKnee],
+            let rightAnkle = bodyParts[.rightAnkle],
+
+            // L LEG
+            let leftHip = bodyParts[.leftHip],
+            let leftKnee = bodyParts[.leftKnee],
+            let leftAnkle = bodyParts[.leftAnkle]
+        else { return }
+
+        let current = Angles(
+            leftHand: calculateAngel(
+                vPoint1: leftElbow,
+                vPoint2: leftShoulder,
+                vPoint3: leftWrist
+            ),
+            rightHand: calculateAngel(
+                vPoint1: rightElbow,
+                vPoint2: rightShoulder,
+                vPoint3: rightWrist
+            ),
+            leftLeg: calculateAngel(
+                vPoint1: leftKnee,
+                vPoint2: leftHip,
+                vPoint3: leftAnkle
+            ),
+            rightLeg: calculateAngel(
+                vPoint1: rightKnee,
+                vPoint2: rightHip,
+                vPoint3: rightAnkle
+            )
+        )
+
+        let isAtBottom =
+            current.rightHand < customExercise.endState.rightHand + tolerance &&
+            current.leftHand  < customExercise.endState.leftHand  + tolerance &&
+            current.rightLeg  < customExercise.endState.rightLeg  + tolerance &&
+            current.leftLeg   < customExercise.endState.leftLeg   + tolerance
+
+        if isAtBottom {
+            wasInBottomPosition = true
+            return
+        }
+
+        let isAtTop =
+            current.rightHand > customExercise.startState.rightHand - tolerance &&
+            current.leftHand  > customExercise.startState.leftHand  - tolerance &&
+            current.rightLeg  > customExercise.startState.rightLeg  - tolerance &&
+            current.leftLeg   > customExercise.startState.leftLeg   - tolerance
+
+        if isAtTop && wasInBottomPosition {
+            count += 1
+            wasInBottomPosition = false
+            print("✅ CUSTOM EXERCISE COUNT: \(count)")
+        }
+    }
+
+    
     private func calculateAngel(vPoint1: VNRecognizedPoint, vPoint2: VNRecognizedPoint, vPoint3: VNRecognizedPoint) -> CGFloat {
         let point1 = CGPoint(x: vPoint1.location.x, y: 1 - vPoint1.location.y)
         let point2 = CGPoint(x: vPoint2.location.x, y: 1 - vPoint2.location.y)
@@ -153,6 +228,6 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         wasInBottomPosition = false
         setupSubscription()
         
-        print("Changed exercise type to: \(newType.rawValue)")
+        print("Changed exercise type to: \(newType.id)")
     }
 }

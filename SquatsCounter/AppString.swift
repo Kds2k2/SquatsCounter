@@ -14,10 +14,6 @@ struct AppString {
         static let title = "Exercises"
     }
     
-    struct Quests {
-        static let title = "Quests"
-    }
-    
     struct Jogging {
         static let title = "Jog"
     }

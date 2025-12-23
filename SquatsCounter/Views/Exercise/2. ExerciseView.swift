@@ -6,14 +6,17 @@
 //
 
 import SwiftUI
-
+import SwiftData
 //1. Animation for change screen 'isStarted'
 
 struct ExerciseView: View {
     
     @Environment(\.modelContext) private var modelContext
-    @StateObject var poseEstimator: PoseEstimator
+    @Query private var patterns: [ExercisePattern]
+    @State private var selectedPattern: ExercisePattern?
+    
     @ObservedObject var exercise: Exercise
+    @StateObject var poseEstimator: PoseEstimator
     
     @State private var isStarted: Bool = false
     @State private var isPaused: Bool = false
@@ -22,7 +25,7 @@ struct ExerciseView: View {
     
     init(exercise: Exercise) {
         self.exercise = exercise
-        _poseEstimator = StateObject(wrappedValue: PoseEstimator(type: exercise.type, count: exercise.count, customExercise: exercise.customExercise))
+        _poseEstimator = StateObject(wrappedValue: PoseEstimator(exercisePattern: exercise.pattern))
     }
     
     var body: some View {
@@ -48,13 +51,13 @@ struct ExerciseView: View {
                     .clipped()
                 
                 if !isHide {
-                    StickFigureView(postEstimator: poseEstimator, size: geo.size, exercise: exercise.type)
+                    StickFigureView(postEstimator: poseEstimator, size: geo.size)
                 }
             }
             
             VStack {
                 HStack {
-                    Text("\(exercise.displayName) reps:")
+                    Text("\(exercise.name) reps:")
                         .font(.title)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("\(exercise.count) / \(exercise.requiredCount)")
@@ -140,12 +143,13 @@ struct ExerciseView: View {
                     TextField("Exercise name", text: $exercise.name)
                         .disabled(!isEdit)
                     
-                    Picker("Type", selection: $exercise.type) {
-                        ForEach(ExerciseType.allCases) { type in
-                            Text(type.displayName).tag(type)
+                    Picker("Pattern", selection: $selectedPattern) {
+                        ForEach(patterns) { pattern in
+                            Text(pattern.name)
+                                .tag(Optional(pattern))
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.wheel)
                     .disabled(!isEdit)
                     
                     Picker("Repeat count", selection: $exercise.requiredCount) {
@@ -163,7 +167,7 @@ struct ExerciseView: View {
                             Button("Save") {
                                 try? modelContext.save()
                                 isEdit = false
-                                poseEstimator.changeType(exercise.type, customExercise: exercise.customExercise)
+                                //Change pattern.
                             }
                         }
                     } else {

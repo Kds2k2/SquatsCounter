@@ -17,16 +17,14 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
     @Published var bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint] = [:]
     @Published var count: Int = 0
     
-    private var type: ExerciseType = .pushUps
-    private var customExercise: CustomExercise?
+    private var exercisePattern: ExercisePattern
     
-    private var wasInBottomPosition = false
+    private var wasInEndState = false
     private var subscriptions = Set<AnyCancellable>()
     public var isPaused = false
     
-    init(type: ExerciseType = .pushUps, count: Int = 0, customExercise: CustomExercise? = nil) {
-        self.type = type
-        self.customExercise = customExercise
+    init(exercisePattern: ExercisePattern) {
+        self.exercisePattern = exercisePattern
         super.init()
         setupSubscription()
     }
@@ -38,16 +36,7 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
             .dropFirst()
             .sink(receiveValue: { [weak self] bodyParts in
                 guard let self = self else { return }
-                switch self.type {
-                case .pushUps:
-                    self.countPushUps(bodyParts: bodyParts)
-                case .squating:
-                    self.countSquats(bodyParts: bodyParts)
-                case .custom:
-                    if let customExercise = self.customExercise {
-                        self.countCustom(bodyParts: bodyParts, customExercise: customExercise)
-                    }
-                }
+                self.count(bodyParts: bodyParts)
             })
             .store(in: &subscriptions)
     }
@@ -85,55 +74,9 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         }
     }
     
-    func countSquats(bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint]) {
-        //POINTS
-        guard
-            let rightKnee = bodyParts[.rightKnee],
-            let rightHip = bodyParts[.rightHip],
-            let rightAnkle = bodyParts[.rightAnkle],
-            let leftKnee = bodyParts[.leftKnee],
-            let leftHip = bodyParts[.leftHip],
-            let leftAnkle = bodyParts[.leftAnkle]
-        else { return }
-        
-        // ANGLES
-        let rightAngle = calculateAngel(vPoint1: rightKnee, vPoint2: rightHip, vPoint3: rightAnkle)
-        let leftAngle = calculateAngel(vPoint1: leftKnee, vPoint2: leftHip, vPoint3: leftAnkle)
-        
-        if rightAngle < 140 && leftAngle < 140 {
-            wasInBottomPosition = true
-        } else if rightAngle > 160 && leftAngle > 160 && wasInBottomPosition {
-            count += 1
-            wasInBottomPosition = false
-            print("✅ Squat \(count)")
-        }
-    }
-    
-    func countPushUps(bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint]) {
-        //POINTS
-        guard
-            let rightShoulder = bodyParts[.rightShoulder],
-            let rightElbow = bodyParts[.rightElbow],
-            let rightWrist = bodyParts[.rightWrist],
-            let leftShoulder = bodyParts[.leftShoulder],
-            let leftElbow = bodyParts[.leftElbow],
-            let leftWrist = bodyParts[.leftWrist]
-        else { return }
-        
-        // ANGLES
-        let rightAngle = calculateAngel(vPoint1: rightElbow, vPoint2: rightShoulder, vPoint3: rightWrist)
-        let leftAngle = calculateAngel(vPoint1: leftElbow, vPoint2: leftShoulder, vPoint3: leftWrist)
-        
-        if rightAngle < 90 && leftAngle < 90 {
-            wasInBottomPosition = true
-        } else if rightAngle > 160 && leftAngle > 160 && wasInBottomPosition {
-            count += 1
-            wasInBottomPosition = false
-            print("✅ Push-up \(count)")
-        }
-    }
-    
-    func countCustom(bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint], customExercise: CustomExercise) {
+    //push up: 90, 160
+    //squating: 140, 160
+    func count(bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint]) {
         let tolerance: CGFloat = 5
 
         guard
@@ -158,7 +101,7 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
             let leftAnkle = bodyParts[.leftAnkle]
         else { return }
 
-        let current = Angles(
+        let current = PatternAngles(
             leftHand: calculateAngel(
                 vPoint1: leftElbow,
                 vPoint2: leftShoulder,
@@ -181,31 +124,30 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
             )
         )
 
-        let isAtBottom =
-            current.rightHand < customExercise.endState.rightHand + tolerance &&
-            current.leftHand  < customExercise.endState.leftHand  + tolerance &&
-            current.rightLeg  < customExercise.endState.rightLeg  + tolerance &&
-            current.leftLeg   < customExercise.endState.leftLeg   + tolerance
+        let isAtEndState =
+            isLess(current.rightHand, than: exercisePattern.endState.rightHand, tolerance: tolerance) &&
+            isLess(current.leftHand,  than: exercisePattern.endState.leftHand,  tolerance: tolerance) &&
+            isLess(current.rightLeg,  than: exercisePattern.endState.rightLeg,  tolerance: tolerance) &&
+            isLess(current.leftLeg,   than: exercisePattern.endState.leftLeg,   tolerance: tolerance)
 
-        if isAtBottom {
-            wasInBottomPosition = true
+        if isAtEndState {
+            wasInEndState = true
             return
         }
 
-        let isAtTop =
-            current.rightHand > customExercise.startState.rightHand - tolerance &&
-            current.leftHand  > customExercise.startState.leftHand  - tolerance &&
-            current.rightLeg  > customExercise.startState.rightLeg  - tolerance &&
-            current.leftLeg   > customExercise.startState.leftLeg   - tolerance
+        let isAtStartState =
+            isGreater(current.rightHand, than: exercisePattern.startState.rightHand, tolerance: tolerance) &&
+            isGreater(current.leftHand,  than: exercisePattern.startState.leftHand,  tolerance: tolerance) &&
+            isGreater(current.rightLeg,  than: exercisePattern.startState.rightLeg,  tolerance: tolerance) &&
+            isGreater(current.leftLeg,   than: exercisePattern.startState.leftLeg,   tolerance: tolerance)
 
-        if isAtTop && wasInBottomPosition {
+        if isAtStartState && wasInEndState {
             count += 1
-            wasInBottomPosition = false
+            wasInEndState = false
             print("✅ CUSTOM EXERCISE COUNT: \(count)")
         }
     }
 
-    
     private func calculateAngel(vPoint1: VNRecognizedPoint, vPoint2: VNRecognizedPoint, vPoint3: VNRecognizedPoint) -> CGFloat {
         let point1 = CGPoint(x: vPoint1.location.x, y: 1 - vPoint1.location.y)
         let point2 = CGPoint(x: vPoint2.location.x, y: 1 - vPoint2.location.y)
@@ -227,12 +169,17 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         return angle
     }
     
-    func changeType(_ newType: ExerciseType, customExercise: CustomExercise? = nil) {
-        self.type = newType
-        self.customExercise = customExercise
-        wasInBottomPosition = false
-        setupSubscription()
-        
-        print("Changed exercise type to: \(newType.id)")
+    @inline(__always)
+    func isLess(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
+        guard let target else { return true }
+        guard let current else { return false }
+        return current < target + tolerance
+    }
+
+    @inline(__always)
+    func isGreater(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
+        guard let target else { return true }
+        guard let current else { return false }
+        return current > target - tolerance
     }
 }

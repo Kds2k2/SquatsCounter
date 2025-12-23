@@ -1,36 +1,36 @@
 //
-//  Exercise.swift
+//  Workout.swift
 //  SquatsCounter
 //
-//  Created by Dmitro Kryzhanovsky on 13.10.2025.
+//  Created by Dmitro Kryzhanovsky on 23.12.2025.
 //
 
 import SwiftUI
 import SwiftData
 
 @Model
-final class Exercise: ObservableObject {
+final class Workout: ObservableObject {
     var name: String
     
-    var count: Int = 0
-    var requiredCount: Int
+    var repeats: Int = 0
+    var restDuration: Int = 2
     
     var isStart: Bool = false
     var isDone: Bool = false
     var lastRefresh: Date? = nil
     
     @Relationship(deleteRule: .cascade)
-    var pattern: ExercisePattern
+    var exercises: [Exercise]?
     
     @Relationship(deleteRule: .cascade)
     var streak: Streak?
     
-    init(name: String, pattern: ExercisePattern, requiredCount: Int) {
+    init(name: String, repeats: Int, restDuration: Int, exercises: [Exercise]) {
         self.name = name
-        self.requiredCount = requiredCount
+        self.repeats = repeats
+        self.restDuration = restDuration
         self.lastRefresh = .now
-        
-        self.pattern = pattern
+        self.exercises = []
         self.streak = Streak()
     }
     
@@ -43,7 +43,6 @@ final class Exercise: ObservableObject {
         let lastStart = lastRefresh.map { calendar.startOfDay(for: $0) }
 
         if lastStart != todayStart {
-            count = 0
             isStart = false
             isDone = false
             lastRefresh = now

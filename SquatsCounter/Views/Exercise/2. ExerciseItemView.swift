@@ -66,10 +66,10 @@ struct ExerciseItemView: View {
             }
             
             HStack {
-                Text("Type:")
+                Text("Pattern:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.displayName)")
+                Text("\(exercise.pattern.name)")
                     .foregroundStyle(AppColors.surface)
             }
             
@@ -106,6 +106,11 @@ struct ExerciseItemView: View {
 }
 
 #Preview {
-    @Previewable @State var item = Exercise(name: "123", type: .squating, requiredCount: 22)
+    let pattern = ExercisePattern(name: "Squating",
+                                      startState: PatternAngles(leftHand: 0, rightHand: 0, leftLeg: 0, rightLeg: 0),
+                                      endState: PatternAngles(leftHand: 30, rightHand: 30, leftLeg: 30, rightLeg: 30)
+    )
+    
+    let item = Exercise(name: "123", pattern: pattern, requiredCount: 22)
     ExerciseItemView(exercise: item)
 }

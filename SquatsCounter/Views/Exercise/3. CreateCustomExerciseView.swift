@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import AVFoundation
 import Vision
 
@@ -22,7 +23,6 @@ struct CreateCustomExerciseView: View {
     
     @State private var state: CreationState = .recording
     @State private var name = ""
-    @State private var repeatCount = 10
     @State private var startTime: Double?
     @State private var endTime: Double?
     @State private var currentTime: Double = 0
@@ -32,6 +32,8 @@ struct CreateCustomExerciseView: View {
     @State private var player: AVPlayer?
     @State private var videoDuration: Double = 0
     @State private var timeObserver: Any?
+    
+    let onSave: () -> Void
     
     var body: some View {
         NavigationStack {
@@ -43,7 +45,7 @@ struct CreateCustomExerciseView: View {
                 }
             }
             .ignoresSafeArea()
-            .navigationTitle("Create Custom Exercise")
+            .navigationTitle("Create Custom Pattern")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -54,8 +56,9 @@ struct CreateCustomExerciseView: View {
                 }
                 if state == .reviewing {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Save") {
-                            saveExercise()
+                        Button("Save Pattern") {
+                            savePattern()
+                            //onSave()
                         }
                         .disabled(!canSave)
                     }
@@ -66,12 +69,12 @@ struct CreateCustomExerciseView: View {
             } message: {
                 Text(alertMessage)
             }
-            .onChange(of: recorderViewModel.recordedVideoURL) { newURL in
+            .onChange(of: recorderViewModel.recordedVideoURL, { _, newURL in
                 guard let url = newURL else { return }
                 setupVideoPlayer(url: url)
                 recorderViewModel.stopSession()
                 state = .reviewing
-            }
+            })
             .onDisappear {
                 cleanup()
             }
@@ -162,19 +165,14 @@ struct CreateCustomExerciseView: View {
                     Divider()
                     
                     VStack(spacing: 12) {
-                        TextField("Exercise name", text: $name)
+                        TextField("Pattern name", text: $name)
                             .textFieldStyle(.roundedBorder)
                         
-                        HStack {
-                            Text("Repeat count:")
-                            Spacer()
-                            Picker("Repeat count", selection: $repeatCount) {
-                                ForEach(1...100, id: \.self) { count in
-                                    Text("\(count)").tag(count)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                        }
+                        Text("Set start and end times to define the movement pattern")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                     }
                     .padding()
                 }
@@ -184,7 +182,9 @@ struct CreateCustomExerciseView: View {
     }
     
     private var canSave: Bool {
-        !name.isEmpty && startTime != nil && endTime != nil
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        startTime != nil &&
+        endTime != nil
     }
     
     private func toggleRecording() {
@@ -225,15 +225,16 @@ struct CreateCustomExerciseView: View {
         player?.pause()
     }
     
-    private func saveExercise() {
+    private func savePattern() {
         guard let start = startTime, let end = endTime else {
             alertMessage = "Please set both start and end times"
             showAlert = true
             return
         }
         
-        guard !name.isEmpty else {
-            alertMessage = "Please enter an exercise name"
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            alertMessage = "Please enter a pattern name"
             showAlert = true
             return
         }
@@ -256,20 +257,13 @@ struct CreateCustomExerciseView: View {
                 let endAngles = try await extractAngles(from: videoURL, at: end)
                 
                 await MainActor.run {
-                    let customExercise = CustomExercise(
-                        name: name,
+                    let pattern = ExercisePattern(
+                        name: trimmedName,
                         startState: startAngles,
                         endState: endAngles
                     )
                     
-                    let exercise = Exercise(
-                        name: name,
-                        type: .custom,
-                        requiredCount: repeatCount,
-                        customExercise: customExercise
-                    )
-                    
-                    modelContext.insert(exercise)
+                    modelContext.insert(pattern)
                     try? modelContext.save()
                     
                     cleanup()
@@ -284,7 +278,7 @@ struct CreateCustomExerciseView: View {
         }
     }
     
-    private func extractAngles(from videoURL: URL, at time: Double) async throws -> Angles {
+    private func extractAngles(from videoURL: URL, at time: Double) async throws -> PatternAngles {
         let asset = AVAsset(url: videoURL)
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true
@@ -316,7 +310,7 @@ struct CreateCustomExerciseView: View {
         let leftLegAngle = calculateAngle(p1: leftKnee, p2: leftHip, p3: leftAnkle)
         let rightLegAngle = calculateAngle(p1: rightKnee, p2: rightHip, p3: rightAnkle)
         
-        return Angles(
+        return PatternAngles(
             leftHand: leftHandAngle,
             rightHand: rightHandAngle,
             leftLeg: leftLegAngle,

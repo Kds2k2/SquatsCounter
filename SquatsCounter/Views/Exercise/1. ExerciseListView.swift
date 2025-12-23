@@ -8,17 +8,11 @@
 import SwiftUI
 import SwiftData
 
-enum ExerciseSheet: Identifiable {
-    case addExercise
-    
-    var id: Int { hashValue }
-}
-
 struct ExerciseListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var exercises: [Exercise]
     
-    @State private var exerciseSheet: ExerciseSheet?
+    @State private var showAddExercise = false
     @State private var showCreatePattern = false
     
     init() {
@@ -27,8 +21,8 @@ struct ExerciseListView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            NavigationStack {
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
                 if exercises.isEmpty {
                     ContentUnavailableView {
                         Label("No Exercises", systemImage: "dumbbell")
@@ -37,7 +31,7 @@ struct ExerciseListView: View {
                     } actions: {
                         Button {
                             withoutAnimation {
-                                exerciseSheet = .addExercise
+                                showAddExercise = true
                             }
                         } label: {
                             Text("Add Exercise")
@@ -69,34 +63,31 @@ struct ExerciseListView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         withoutAnimation {
-                            exerciseSheet = .addExercise
+                            showAddExercise = true
                         }
                     } label: {
                         Label("Add Exercise", systemImage: "plus")
                     }
                 }
             }
-            .sheet(item: $exerciseSheet) { sheet in
-                switch sheet {
-                case .addExercise:
-                    AddExerciseView(onCreatePattern: {
-                        exerciseSheet = nil
-                        showCreatePattern = true
-                    })
-                    .presentationDetents([.height(160)])
-                    .interactiveDismissDisabled(false)
-                    .presentationBackgroundInteraction(.disabled)
-                    .presentationDragIndicator(.hidden)
-                }
+            .sheet(isPresented: $showAddExercise) {
+                AddExerciseView(onCreatePattern: {
+                    showAddExercise = false
+                    showCreatePattern = true
+                })
+                .presentationDetents([.height(160)])
+                .interactiveDismissDisabled(false)
+                .presentationBackgroundInteraction(.disabled)
+                .presentationDragIndicator(.hidden)
             }
             .navigationDestination(isPresented: $showCreatePattern) {
                 CreateCustomExerciseView {
                     showCreatePattern = false
                 }
             }
-        }
-        .onAppear() {
-            reset()
+            .onAppear() {
+                reset()
+            }
         }
     }
     

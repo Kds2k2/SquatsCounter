@@ -162,36 +162,37 @@ struct CreatePatternView: View {
     }
     
     private var reviewingView: some View {
-        ZStack {
-            if let player = player {
-                GeometryReader { geo in
+        GeometryReader { geo in
+            ZStack {
+                if let player = player {
                     VideoPlayerView(player: player)
                     
                     if !reviewBodyParts.isEmpty {
                         StickFigureView(bodyParts: reviewBodyParts, size: geo.size)
                     }
+                } else {
+                    Rectangle()
+                        .fill(Color.black)
                 }
-            } else {
-                Rectangle()
-                    .fill(Color.black)
-            }
-            
-            VStack {
-                HStack {
-                    Spacer()
-                    Button {
-                        showReviewSheet = true
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
+                
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            showReviewSheet = true
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                        }
+                        .padding()
+                        .padding(.top, geo.safeAreaInsets.top)
                     }
-                    .padding()
+                    Spacer()
                 }
-                Spacer()
             }
         }
         .onChange(of: currentTime) { _, newTime in
@@ -414,6 +415,7 @@ struct CreatePatternView: View {
         } catch {
             await MainActor.run {
                 reviewBodyParts = [:]
+                lastProcessedTime = time
             }
         }
     }

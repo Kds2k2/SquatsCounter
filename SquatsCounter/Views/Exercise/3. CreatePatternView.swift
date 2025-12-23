@@ -1,5 +1,5 @@
 //
-//  CreateCustomExerciseView.swift
+//  CreatePatternView.swift
 //  SquatsCounter
 //
 //  Created by Dmitro Kryzhanovsky on 22.12.2025.
@@ -15,7 +15,7 @@ enum CreationState {
     case reviewing
 }
 
-struct CreateCustomExerciseView: View {
+struct CreatePatternView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
@@ -33,6 +33,8 @@ struct CreateCustomExerciseView: View {
     @State private var videoDuration: Double = 0
     @State private var timeObserver: Any?
     @State private var showReviewSheet = false
+    @State private var reviewBodyParts: [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] = [:]
+    @State private var lastProcessedTime: Double = 0
     
     let onSave: () -> Void
     
@@ -47,6 +49,7 @@ struct CreateCustomExerciseView: View {
         .ignoresSafeArea()
         .navigationTitle("Create Custom Pattern")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
@@ -161,10 +164,41 @@ struct CreateCustomExerciseView: View {
     private var reviewingView: some View {
         ZStack {
             if let player = player {
-                VideoPlayerView(player: player)
+                GeometryReader { geo in
+                    VideoPlayerView(player: player)
+                    
+                    if !reviewBodyParts.isEmpty {
+                        StickFigureView(bodyParts: reviewBodyParts, size: geo.size)
+                    }
+                }
             } else {
                 Rectangle()
                     .fill(Color.black)
+            }
+            
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        showReviewSheet = true
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                    .padding()
+                }
+                Spacer()
+            }
+        }
+        .onChange(of: currentTime) { _, newTime in
+            if abs(newTime - lastProcessedTime) > 0.1 {
+                Task {
+                    await updateReviewPose(at: newTime)
+                }
             }
         }
     }
@@ -291,7 +325,7 @@ struct CreateCustomExerciseView: View {
               let rightKnee = bodyParts[.rightKnee],
               let leftAnkle = bodyParts[.leftAnkle],
               let rightAnkle = bodyParts[.rightAnkle] else {
-            throw NSError(domain: "CreateCustomExerciseView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not detect all required body parts"])
+            throw NSError(domain: "CreatePatternView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not detect all required body parts"])
         }
         
         let leftHandAngle = calculateAngle(p1: leftElbow, p2: leftShoulder, p3: leftWrist)
@@ -314,7 +348,7 @@ struct CreateCustomExerciseView: View {
         try handler.perform([request])
         
         guard let observation = request.results?.first else {
-            throw NSError(domain: "CreateCustomExerciseView", code: 2, userInfo: [NSLocalizedDescriptionKey: "No pose detected"])
+            throw NSError(domain: "CreatePatternView", code: 2, userInfo: [NSLocalizedDescriptionKey: "No pose detected"])
         }
         
         var bodyParts: [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] = [:]
@@ -366,5 +400,65 @@ struct CreateCustomExerciseView: View {
         player?.pause()
         player = nil
         recorderViewModel.stopSession()
+    }
+    
+    private func updateReviewPose(at time: Double) async {
+        guard let videoURL = recorderViewModel.recordedVideoURL else { return }
+        
+        do {
+            let bodyParts = try await extractPoseFromVideo(url: videoURL, at: time)
+            await MainActor.run {
+                reviewBodyParts = bodyParts
+                lastProcessedTime = time
+            }
+        } catch {
+            await MainActor.run {
+                reviewBodyParts = [:]
+            }
+        }
+    }
+    
+    private func extractPoseFromVideo(url: URL, at time: Double) async throws -> [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] {
+        let asset = AVAsset(url: url)
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+        imageGenerator.requestedTimeToleranceBefore = .zero
+        imageGenerator.requestedTimeToleranceAfter = .zero
+        
+        let cmTime = CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        let cgImage = try imageGenerator.copyCGImage(at: cmTime, actualTime: nil)
+        
+        return try await detectPoseForReview(in: cgImage)
+    }
+    
+    private func detectPoseForReview(in image: CGImage) async throws -> [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] {
+        let request = VNDetectHumanBodyPoseRequest()
+        let handler = VNImageRequestHandler(cgImage: image, options: [:])
+        
+        try handler.perform([request])
+        
+        guard let observation = request.results?.first else {
+            return [:]
+        }
+        
+        var bodyParts: [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint] = [:]
+        
+        let joints: [VNHumanBodyPoseObservation.JointName] = [
+            .leftShoulder, .rightShoulder,
+            .leftElbow, .rightElbow,
+            .leftWrist, .rightWrist,
+            .leftHip, .rightHip,
+            .leftKnee, .rightKnee,
+            .leftAnkle, .rightAnkle,
+            .root, .neck, .nose
+        ]
+        
+        for joint in joints {
+            if let point = try? observation.recognizedPoint(joint), point.confidence > 0.3 {
+                bodyParts[joint] = point
+            }
+        }
+        
+        return bodyParts
     }
 }

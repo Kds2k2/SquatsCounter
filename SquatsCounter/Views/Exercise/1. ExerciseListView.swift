@@ -81,7 +81,7 @@ struct ExerciseListView: View {
                 .presentationDragIndicator(.hidden)
             }
             .navigationDestination(isPresented: $showCreatePattern) {
-                CreateCustomExerciseView {
+                CreatePatternView {
                     showCreatePattern = false
                 }
             }

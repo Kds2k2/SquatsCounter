@@ -6,43 +6,70 @@
 //
 
 import SwiftUI
+import Vision
 
 struct StickFigureView: View {
-    @ObservedObject var postEstimator: PoseEstimator
+    var bodyParts: [VNHumanBodyPoseObservation.JointName: VNRecognizedPoint]
     var size: CGSize
     
     var body: some View {
-        if !postEstimator.bodyParts.isEmpty {
+        if !bodyParts.isEmpty {
             fullBodyView()
         }
     }
     
     private func fullBodyView() -> some View {
         ZStack {
-            // Right leg
-            Stick(points: [postEstimator.bodyParts[.rightAnkle]!.location, postEstimator.bodyParts[.rightKnee]!.location, postEstimator.bodyParts[.rightHip]!.location, postEstimator.bodyParts[.root]!.location], size: size)
-                .stroke(lineWidth: 5.0)
-                .fill(Color.green)
+            if let rightAnkle = bodyParts[.rightAnkle],
+               let rightKnee = bodyParts[.rightKnee],
+               let rightHip = bodyParts[.rightHip],
+               let root = bodyParts[.root] {
+                Stick(points: [rightAnkle.location, rightKnee.location, rightHip.location, root.location], size: size)
+                    .stroke(lineWidth: 5.0)
+                    .fill(Color.green)
+            }
             
-            // Left leg
-            Stick(points: [postEstimator.bodyParts[.leftAnkle]!.location, postEstimator.bodyParts[.leftKnee]!.location, postEstimator.bodyParts[.leftHip]!.location, postEstimator.bodyParts[.root]!.location], size: size)
-                .stroke(lineWidth: 5.0)
-                .fill(Color.green)
+            if let leftAnkle = bodyParts[.leftAnkle],
+               let leftKnee = bodyParts[.leftKnee],
+               let leftHip = bodyParts[.leftHip],
+               let root = bodyParts[.root] {
+                Stick(points: [leftAnkle.location, leftKnee.location, leftHip.location, root.location], size: size)
+                    .stroke(lineWidth: 5.0)
+                    .fill(Color.green)
+            }
             
-            // Right arm
-            Stick(points: [postEstimator.bodyParts[.rightWrist]!.location, postEstimator.bodyParts[.rightElbow]!.location, postEstimator.bodyParts[.rightShoulder]!.location, postEstimator.bodyParts[.neck]!.location], size: size)
-                .stroke(lineWidth: 5.0)
-                .fill(Color.green)
+            if let rightWrist = bodyParts[.rightWrist],
+               let rightElbow = bodyParts[.rightElbow],
+               let rightShoulder = bodyParts[.rightShoulder],
+               let neck = bodyParts[.neck] {
+                Stick(points: [rightWrist.location, rightElbow.location, rightShoulder.location, neck.location], size: size)
+                    .stroke(lineWidth: 5.0)
+                    .fill(Color.green)
+            }
             
-            // Left arm
-            Stick(points: [postEstimator.bodyParts[.leftWrist]!.location, postEstimator.bodyParts[.leftElbow]!.location, postEstimator.bodyParts[.leftShoulder]!.location, postEstimator.bodyParts[.neck]!.location], size: size)
-                .stroke(lineWidth: 5.0)
-                .fill(Color.green)
+            if let leftWrist = bodyParts[.leftWrist],
+               let leftElbow = bodyParts[.leftElbow],
+               let leftShoulder = bodyParts[.leftShoulder],
+               let neck = bodyParts[.neck] {
+                Stick(points: [leftWrist.location, leftElbow.location, leftShoulder.location, neck.location], size: size)
+                    .stroke(lineWidth: 5.0)
+                    .fill(Color.green)
+            }
             
-            // Root to nose
-            Stick(points: [postEstimator.bodyParts[.root]!.location, postEstimator.bodyParts[.neck]!.location,  postEstimator.bodyParts[.nose]!.location], size: size)
-                .stroke(lineWidth: 5.0)
-                .fill(Color.green)
+            if let root = bodyParts[.root],
+               let neck = bodyParts[.neck],
+               let nose = bodyParts[.nose] {
+                Stick(points: [root.location, neck.location, nose.location], size: size)
+                    .stroke(lineWidth: 5.0)
+                    .fill(Color.green)
+            }
         }
+    }
+}
+
+extension StickFigureView {
+    init(postEstimator: PoseEstimator, size: CGSize) {
+        self.bodyParts = postEstimator.bodyParts
+        self.size = size
     }
 }

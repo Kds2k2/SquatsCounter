@@ -20,6 +20,7 @@ struct ExerciseListView: View {
     @Query private var exercises: [Exercise]
     
     @State private var exerciseSheet: ExerciseSheet?
+    @State private var showCreatePattern = false
     
     init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: AppColors.textPrimary.uiColor]
@@ -80,7 +81,8 @@ struct ExerciseListView: View {
                 switch sheet {
                 case .addExercise:
                     AddExerciseView(onCreatePattern: {
-                        exerciseSheet = .createPattern
+                        exerciseSheet = nil
+                        showCreatePattern = true
                     })
                     .presentationDetents([.height(160)])
                     .interactiveDismissDisabled(false)
@@ -90,6 +92,11 @@ struct ExerciseListView: View {
                     CreateCustomExerciseView {
                         exerciseSheet = .addExercise
                     }
+                }
+            }
+            .navigationDestination(isPresented: $showCreatePattern) {
+                CreateCustomExerciseView {
+                    showCreatePattern = false
                 }
             }
         }

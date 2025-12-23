@@ -32,52 +32,72 @@ struct CreateCustomExerciseView: View {
     @State private var player: AVPlayer?
     @State private var videoDuration: Double = 0
     @State private var timeObserver: Any?
+    @State private var showReviewSheet = false
     
     let onSave: () -> Void
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                if state == .recording {
-                    recordingView
-                } else {
-                    reviewingView
+        ZStack {
+            if state == .recording {
+                recordingView
+            } else {
+                reviewingView
+            }
+        }
+        .ignoresSafeArea()
+        .navigationTitle("Create Custom Pattern")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    cleanup()
+                    showReviewSheet = false
+                    dismiss()
                 }
             }
-            .ignoresSafeArea()
-            .navigationTitle("Create Custom Pattern")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        cleanup()
-                        dismiss()
+        }
+        .alert("Invalid Input", isPresented: $showAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(alertMessage)
+        }
+        .onChange(of: recorderViewModel.recordedVideoURL, { _, newURL in
+            guard let url = newURL else { return }
+            setupVideoPlayer(url: url)
+            recorderViewModel.stopSession()
+            state = .reviewing
+            showReviewSheet = true
+        })
+        .sheet(isPresented: $showReviewSheet) {
+            if let videoURL = recorderViewModel.recordedVideoURL {
+                PatternReviewSheet(
+                    name: $name,
+                    startTime: $startTime,
+                    endTime: $endTime,
+                    currentTime: $currentTime,
+                    videoURL: videoURL,
+                    videoDuration: videoDuration,
+                    onSeek: seekTo,
+                    onSave: savePattern,
+                    canSave: canSave
+                )
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text("Video Not Available")
+                        .font(.headline)
+                    Button("Close") {
+                        showReviewSheet = false
                     }
+                    .buttonStyle(.bordered)
                 }
-                if state == .reviewing {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Save Pattern") {
-                            savePattern()
-                            //onSave()
-                        }
-                        .disabled(!canSave)
-                    }
-                }
+                .padding()
             }
-            .alert("Invalid Input", isPresented: $showAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(alertMessage)
-            }
-            .onChange(of: recorderViewModel.recordedVideoURL, { _, newURL in
-                guard let url = newURL else { return }
-                setupVideoPlayer(url: url)
-                recorderViewModel.stopSession()
-                state = .reviewing
-            })
-            .onDisappear {
-                cleanup()
-            }
+        }
+        .onDisappear {
+            cleanup()
         }
     }
     
@@ -139,44 +159,12 @@ struct CreateCustomExerciseView: View {
     }
     
     private var reviewingView: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                if let player = player {
-                    VideoPlayerView(player: player)
-                        .frame(height: geometry.size.height * 0.5)
-                } else {
-                    Rectangle()
-                        .fill(Color.black)
-                        .frame(height: geometry.size.height * 0.5)
-                }
-                
-                VStack(spacing: 16) {
-                    if let videoURL = recorderViewModel.recordedVideoURL {
-                        VideoTimelineView(
-                            videoURL: videoURL,
-                            videoDuration: videoDuration,
-                            startTime: $startTime,
-                            endTime: $endTime,
-                            currentTime: $currentTime,
-                            onSeek: seekTo
-                        )
-                    }
-                    
-                    Divider()
-                    
-                    VStack(spacing: 12) {
-                        TextField("Pattern name", text: $name)
-                            .textFieldStyle(.roundedBorder)
-                        
-                        Text("Set start and end times to define the movement pattern")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    .padding()
-                }
-                .background(Color(UIColor.systemBackground))
+        ZStack {
+            if let player = player {
+                VideoPlayerView(player: player)
+            } else {
+                Rectangle()
+                    .fill(Color.black)
             }
         }
     }
@@ -266,6 +254,7 @@ struct CreateCustomExerciseView: View {
                     modelContext.insert(pattern)
                     try? modelContext.save()
                     
+                    showReviewSheet = false
                     cleanup()
                     dismiss()
                 }

@@ -34,7 +34,7 @@ Successfully refactored the CreateCustomExerciseView to match the new requiremen
 - Updated `onCreatePattern` callback to dismiss sheet and trigger navigation
 - Added `.navigationDestination(isPresented: $showCreatePattern)` to handle full-screen navigation
 - CreateCustomExerciseView now opens as full screen instead of sheet
-- Maintained backward compatibility with existing `.createPattern` enum case
+- Removed deprecated `.createPattern` enum case (no longer needed)
 
 ## How the Solution Was Tested
 
@@ -102,7 +102,29 @@ Successfully refactored the CreateCustomExerciseView to match the new requiremen
 ✅ State management properly implemented  
 ⚠️ Manual UI testing required (simulator/device testing recommended)
 
+## Post-Review Fixes
+
+After initial code review, the following issues were addressed:
+
+### Fix 1: Sheet State Reset on Cancel/Save
+**Issue**: `showReviewSheet` state was not reset when user canceled or saved, causing stale state  
+**Fix**: Added `showReviewSheet = false` before dismiss in both Cancel button (`CreateCustomExerciseView.swift:54`) and save success handler (`CreateCustomExerciseView.swift:244`)
+
+### Fix 2: Dead Code Removal
+**Issue**: `.createPattern` enum case and switch case were no longer used after navigation change  
+**Fix**: Removed `.createPattern` case from `ExerciseSheet` enum (`ExerciseListView.swift:11-15`) and corresponding switch case (`ExerciseListView.swift:80-90`)
+
+### Fix 3: Defensive Programming for Nil Video URL
+**Issue**: Sheet could present with empty content if `recordedVideoURL` was unexpectedly nil  
+**Fix**: Added else clause with error message and close button (`CreateCustomExerciseView.swift:84-97`)
+
+### Verification
+- All fixes compiled successfully
+- Build status: **BUILD SUCCEEDED**
+- No warnings or errors
+
 ## Notes
-- The `.createPattern` case in ExerciseSheet enum remains for backward compatibility but is no longer actively used in the navigation flow
 - The sheet can be dismissed and reopened, allowing users to review timeline multiple times
 - Video player state persists across sheet presentations
+- Error handling added for edge cases (nil video URL)
+- State properly cleaned up on all exit paths (cancel, save, dismiss)

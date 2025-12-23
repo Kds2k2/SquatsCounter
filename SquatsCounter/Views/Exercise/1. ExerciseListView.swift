@@ -10,7 +10,6 @@ import SwiftData
 
 enum ExerciseSheet: Identifiable {
     case addExercise
-    case createPattern
     
     var id: Int { hashValue }
 }
@@ -88,10 +87,6 @@ struct ExerciseListView: View {
                     .interactiveDismissDisabled(false)
                     .presentationBackgroundInteraction(.disabled)
                     .presentationDragIndicator(.hidden)
-                case .createPattern:
-                    CreateCustomExerciseView {
-                        exerciseSheet = .addExercise
-                    }
                 }
             }
             .navigationDestination(isPresented: $showCreatePattern) {

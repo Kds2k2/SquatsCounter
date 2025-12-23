@@ -51,6 +51,7 @@ struct CreateCustomExerciseView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
                     cleanup()
+                    showReviewSheet = false
                     dismiss()
                 }
             }
@@ -80,6 +81,19 @@ struct CreateCustomExerciseView: View {
                     onSave: savePattern,
                     canSave: canSave
                 )
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text("Video Not Available")
+                        .font(.headline)
+                    Button("Close") {
+                        showReviewSheet = false
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
             }
         }
         .onDisappear {
@@ -240,6 +254,7 @@ struct CreateCustomExerciseView: View {
                     modelContext.insert(pattern)
                     try? modelContext.save()
                     
+                    showReviewSheet = false
                     cleanup()
                     dismiss()
                 }

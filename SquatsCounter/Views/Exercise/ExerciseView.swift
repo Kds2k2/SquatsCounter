@@ -25,7 +25,7 @@ struct ExerciseView: View {
     
     init(exercise: Exercise) {
         self.exercise = exercise
-        _poseEstimator = StateObject(wrappedValue: PoseEstimator(exercisePattern: exercise.pattern))
+        _poseEstimator = StateObject(wrappedValue: PoseEstimator(exercisePattern: exercise.pattern!))
     }
     
     var body: some View {
@@ -220,7 +220,7 @@ struct ExerciseView: View {
         
         if exercise.count >= exercise.requiredCount {
             exercise.isDone = true
-            exercise.streak?.recordCompletion()
+            exercise.streak.recordCompletion()
             isStarted = false
         }
         

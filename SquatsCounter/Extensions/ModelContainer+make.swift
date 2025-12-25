@@ -19,6 +19,10 @@ extension ModelContainer {
         do {
             let container = try ModelContainer(for: schema, configurations: [ cfg ])
             container.mainContext.autosaveEnabled = true
+            
+            let context = container.mainContext
+            try? ExercisePattern.seedDefaultsIfNeeded(context: context)
+            
             return container
         } catch {
             fatalError("Could not create Model Container: \(error)")

@@ -19,11 +19,11 @@ final class Exercise: ObservableObject {
     var isDone: Bool = false
     var lastRefresh: Date? = nil
     
-    @Relationship(deleteRule: .cascade)
-    var pattern: ExercisePattern
+    @Relationship(deleteRule: .nullify)
+    var pattern: ExercisePattern?
     
     @Relationship(deleteRule: .cascade)
-    var streak: Streak?
+    var streak: Streak
     
     init(name: String, pattern: ExercisePattern, requiredCount: Int) {
         self.name = name
@@ -47,7 +47,7 @@ final class Exercise: ObservableObject {
             isStart = false
             isDone = false
             lastRefresh = now
-            streak?.check()
+            streak.check()
         }
     }
 }

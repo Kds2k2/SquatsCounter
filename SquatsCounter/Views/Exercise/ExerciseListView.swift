@@ -81,9 +81,7 @@ struct ExerciseListView: View {
                 .presentationDragIndicator(.hidden)
             }
             .navigationDestination(isPresented: $showCreatePattern) {
-                CreatePatternView {
-                    showCreatePattern = false
-                }
+                AddPatternView()
             }
             .onAppear() {
                 reset()
@@ -98,7 +96,7 @@ struct ExerciseListView: View {
         
         for exercise in exercises {
             exercise.refresh()
-            exercise.streak?.check()
+            exercise.streak.check()
         }
 
         try? modelContext.save()

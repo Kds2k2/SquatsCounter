@@ -19,6 +19,11 @@ struct ContentView: View {
                     DispatchQueue.main.async { KeyboardWarmup.warmupInBackground() }
                 }
             
+            AddPatternView()
+                .tabItem {
+                    Label("Test", systemImage: "figure")
+                }
+            
             JoggingView()
                 .tabItem {
                     Label(AppString.Jogging.title, systemImage: "figure.run")

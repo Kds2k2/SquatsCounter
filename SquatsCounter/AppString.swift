@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AppString {
-    static let title = "DailyQuest"
+    static let title = "DailyQuest" //Change title
     
     struct Exercise {
         static let title = "Exercises"

@@ -69,7 +69,7 @@ struct ExerciseItemView: View {
                 Text("Pattern:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.pattern.name)")
+                Text("\(exercise.pattern?.name)")
                     .foregroundStyle(AppColors.surface)
             }
             
@@ -77,7 +77,7 @@ struct ExerciseItemView: View {
                 Text("Streak - count:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.streak?.current)")
+                Text("\(exercise.streak.current)")
                     .foregroundStyle(AppColors.surface)
             }
             
@@ -85,7 +85,7 @@ struct ExerciseItemView: View {
                 Text("Streak - best:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text("\(exercise.streak?.best)")
+                Text("\(exercise.streak.best)")
                     .foregroundStyle(AppColors.surface)
             }
             
@@ -93,7 +93,7 @@ struct ExerciseItemView: View {
                 Text("Streak - lastCompleted:")
                     .fontWeight(.semibold)
                     .foregroundStyle(AppColors.surface)
-                Text(formatted(exercise.streak?.lastCompleted))
+                Text(formatted(exercise.streak.lastCompleted))
                     .foregroundStyle(AppColors.surface)
             }
         }

@@ -22,19 +22,19 @@ class VideoRedactor: NSObject, AVCaptureFileOutputRecordingDelegate, ObservableO
     //MARK: - AVCaptureFileOutputRecordingDelegate
     func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
         //TODO: ...
-        print("Start recording.")
+        LogManager.shared.debug("Start recording.")
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        print("didFinish.")
+        LogManager.shared.debug("didFinish.")
         if let error = error {
-          print("Error recording: \(error.localizedDescription)")
+            LogManager.shared.error("Error recording: \(error.localizedDescription)")
           return
         }
   
         DispatchQueue.main.async {
             self.videoURL = outputFileURL
-            print("Video URL saved.")
+            LogManager.shared.debug("Video URL saved.")
         }
     }
 }

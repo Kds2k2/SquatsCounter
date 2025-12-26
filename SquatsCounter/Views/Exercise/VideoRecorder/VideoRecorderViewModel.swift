@@ -26,7 +26,8 @@ class VideoRecorderViewModel: ObservableObject {
         captureSession.beginConfiguration()
         
         //Device front camera
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front), let deviceInput = try? AVCaptureDeviceInput(device: device), captureSession.canAddInput(deviceInput) else {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
+                let deviceInput = try? AVCaptureDeviceInput(device: device), captureSession.canAddInput(deviceInput) else {
             print("--> No input device.")
             return
         }
@@ -75,6 +76,7 @@ class VideoRecorderViewModel: ObservableObject {
     
     //MARK: - Recording
     func startRecording() {
+        LogManager.shared.debug("Start recording.")
         guard let delegate = self.delegate else { return }
         guard let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("video1.mp4") else { return }
         if FileManager.default.fileExists(atPath: url.path) {
@@ -85,6 +87,7 @@ class VideoRecorderViewModel: ObservableObject {
     }
 
     func stopRecording() {
+        LogManager.shared.debug("Stop recording.")
         captureMovieFileOutput.stopRecording()
         isRecording = false
     }

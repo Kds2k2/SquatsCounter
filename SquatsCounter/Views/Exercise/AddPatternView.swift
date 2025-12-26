@@ -12,9 +12,13 @@ struct AddPatternView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @StateObject var videoRedactor: VideoRedactor = .init()
+    @StateObject var videoRedactor: VideoRedactor
     @State var isReviewing: Bool = false
     @State var videoURL: URL?
+    
+    init() {
+        _videoRedactor = StateObject(wrappedValue: VideoRedactor())
+    }
     
     var body: some View {
         NavigationStack {
@@ -33,9 +37,10 @@ struct AddPatternView: View {
             .toolbar(.hidden, for: .tabBar)
             .onReceive(videoRedactor.$videoURL) { newURL in
                 if let newURL = newURL {
-                    print("Video URL: \(newURL.absoluteString);")
+                    LogManager.shared.debug("Video URL: \(newURL.absoluteString);")
+                    isReviewing = true
                 } else {
-                    print("Video URL is null.")
+                    LogManager.shared.error("Video URL is null.")
                 }
             }
         }

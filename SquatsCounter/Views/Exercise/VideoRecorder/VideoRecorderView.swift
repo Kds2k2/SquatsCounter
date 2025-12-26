@@ -22,11 +22,13 @@ struct VideoRecorderView: View {
         ZStack {
             VideoRecorderPreviewView(previewLayer: viewModel.frontPreviewLayer)
                 .onAppear {
+                    LogManager.shared.debug("Task to start running.")
                     Task.detached {
                         await viewModel.captureSession.startRunning()
                     }
                 }
                 .onDisappear {
+                    LogManager.shared.debug("Task to stop running.")
                     Task.detached {
                         await viewModel.captureSession.stopRunning()
                     }

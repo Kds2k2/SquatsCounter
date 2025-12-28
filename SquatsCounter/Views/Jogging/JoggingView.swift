@@ -11,8 +11,9 @@ import MapKit
 struct JoggingView: View {
     
     @StateObject var joggingManager = JoggingManager()
-    @State private var showCongrats = false
     @State private var cameraPosition: MapCameraPosition = .userLocation(followsHeading: true, fallback: .automatic)
+    
+    @State private var showCongrats = false
     @State private var showSheet = true
     
     @State private var isStart = false
@@ -48,7 +49,7 @@ struct JoggingView: View {
                 }
             }
             
-            //Bottom
+            // BOTTOM
             VStack {
                 Spacer()
                 
@@ -71,7 +72,7 @@ struct JoggingView: View {
         .alert("🎉 Congratulations!", isPresented: $showCongrats) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("You ran \(joggingManager.distance / 1000, specifier: "%.2f") km")
+            Text("You ran " + joggingManager.distance.toKM)
         }
     }
 
@@ -82,7 +83,7 @@ struct JoggingView: View {
                 Button(action: {
                     //TODO: ...
                 }) {
-                    Text("Settings")
+                    Text(AppString.Jogging.settings)
                         .foregroundStyle(AppColors.textPrimary)
                         .font(.system(size: 18, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -95,7 +96,7 @@ struct JoggingView: View {
                 Button(action: {
                     //TODO: ...
                 }) {
-                    Text("Goal")
+                    Text(AppString.Jogging.goal)
                         .foregroundStyle(AppColors.textPrimary)
                         .font(.system(size: 18, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -113,7 +114,7 @@ struct JoggingView: View {
                         joggingManager.start()
                         isStart = true
                     }) {
-                        Text("Start")
+                        Text(AppString.Jogging.State.start)
                             .foregroundStyle(AppColors.background)
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity)
@@ -128,7 +129,7 @@ struct JoggingView: View {
                             Button {
                                 showStopAlert = true
                             } label: {
-                                Label("Stop", systemImage: "stop.circle.fill")
+                                Label(AppString.Jogging.State.stop, systemImage: AppImage.Jogging.stop)
                                     .font(.title3.bold())
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -136,31 +137,31 @@ struct JoggingView: View {
                                     .foregroundStyle(AppColors.textPrimary)
                                     .cornerRadius(12)
                             }
-                            .alert("End Jog?", isPresented: $showStopAlert) {
-                                Button("Discard", role: .destructive) {
+                            .alert(AppString.Jogging.State.title, isPresented: $showStopAlert) {
+                                Button(AppString.Jogging.State.discard, role: .destructive) {
                                     joggingManager.stop()
                                     isPause = false
                                     isStart = false
                                 }
                                 
-                                Button("Save") {
+                                Button(AppString.Jogging.State.save) {
                                     joggingManager.saveRoute()
                                     joggingManager.stop()
                                     isPause = false
                                     isStart = false
                                 }
 
-                                Button("Cancel", role: .cancel) { }
+                                Button(AppString.Jogging.State.cancel, role: .cancel) { }
                                 
                             } message: {
-                                Text("Do you want to save this route or discard it?")
+                                Text(AppString.Jogging.State.message)
                             }
                             
                             Button {
                                 joggingManager.continue()
                                 isPause = false
                             } label: {
-                                Label("Continue", systemImage: "play.fill")
+                                Label(AppString.Jogging.State.continue, systemImage: AppImage.Jogging.continue)
                                     .font(.title3.bold())
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -173,7 +174,7 @@ struct JoggingView: View {
                                 joggingManager.pause()
                                 isPause = true
                             } label: {
-                                Label("Pause", systemImage: "pause.fill")
+                                Label(AppString.Jogging.State.pause, systemImage: AppImage.Jogging.pause)
                                     .font(.title3.bold())
                                     .frame(maxWidth: .infinity)
                                     .padding()

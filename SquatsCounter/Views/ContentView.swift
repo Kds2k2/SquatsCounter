@@ -12,27 +12,14 @@ struct ContentView: View {
     var body: some View {
         TabView {
             ExerciseListView()
-                .tabItem {
-                    Label(AppString.Exercise.title, systemImage: "figure")
-                }
-                .onAppear {
-                    DispatchQueue.main.async { KeyboardWarmup.warmupInBackground() }
-                }
-            
-            AddPatternView()
-                .tabItem {
-                    Label("Test", systemImage: "figure")
-                }
+                .tabItem { Label(AppString.TabBar.exercise, systemImage: AppImage.TabBar.exercise) }
+                .onAppear { DispatchQueue.main.async { KeyboardWarmup.warmupInBackground() }}
             
             JoggingView()
-                .tabItem {
-                    Label(AppString.Jogging.title, systemImage: "figure.run")
-                }
+                .tabItem { Label(AppString.TabBar.jogging, systemImage: AppImage.TabBar.jogging)}
             
             RoutesListView()
-                .tabItem {
-                    Label(AppString.Route.title, systemImage: "map")
-                }
+                .tabItem { Label(AppString.TabBar.routes, systemImage: AppImage.TabBar.routes)}
         }
     }
 }

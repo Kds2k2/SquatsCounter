@@ -1,15 +1,15 @@
 //
-//  PoseEstimator.swift
+//  ExerciseCameraDelegate.swift
 //  SquatsCounter
 //
-//  Created by Dmitro Kryzhanovsky on 10.10.2025.
+//  Created by Dmitro Kryzhanovsky on 26.12.2025.
 //
 
-import SwiftUI
-import AVFoundation
-import Foundation
 import Vision
+import SwiftUI
 import Combine
+import Foundation
+import AVFoundation
 
 class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, ObservableObject {
     
@@ -45,27 +45,28 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         let request = VNDetectHumanBodyPoseRequest(completionHandler: handler)
         
         do {
-            try sequenceHandler.perform([request], on: sampleBuffer, orientation: .up)
+            try sequenceHandler.perform([request], on: sampleBuffer, orientation: .upMirrored)
         } catch {
-            print("Some error: \(error.localizedDescription)")
+            LogManager.shared.error("Some error: \(error.localizedDescription)")
         }
     }
     
     func handler(request: VNRequest, error: Error?) {
         guard error == nil else {
-            print("Some error: \(error!.localizedDescription)")
+            LogManager.shared.error("Some error: \(error!.localizedDescription)")
             return
         }
         
         guard !isPaused else { return }
         
+        // Make state
         guard let bodyPoseResults = request.results as? [VNHumanBodyPoseObservation] else {
-            print("Body pose results == nil")
+            //LogManager.shared.warn("Body pose results == nil")
             return
         }
-        
+        // Make state
         guard let bodyParts = try? bodyPoseResults.first?.recognizedPoints(.all) else {
-            print("Body parts == nil")
+            //LogManager.shared.warn("Body parts == nil")
             return
         }
         
@@ -144,7 +145,6 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         if isAtStartState && wasInEndState {
             count += 1
             wasInEndState = false
-            print("✅ CUSTOM EXERCISE COUNT: \(count)")
         }
     }
 

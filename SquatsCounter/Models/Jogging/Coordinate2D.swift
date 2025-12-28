@@ -5,6 +5,7 @@
 //  Created by Dmitro Kryzhanovsky on 10.11.2025.
 //
 
+import Swift
 import CoreLocation
 
 struct Coordinate2D: Codable {
@@ -35,3 +36,36 @@ extension Array where Element == Coordinate2D {
         return coordinates
     }
 }
+
+extension Array where Element == Coordinate2D {
+
+    func normalizedPoints(in size: CGSize, inset: CGFloat = 10) -> [CGPoint] {
+        guard count > 1 else { return [] }
+
+        let lats = map(\.latitude)
+        let lons = map(\.longitude)
+
+        let minLat = lats.min()!
+        let maxLat = lats.max()!
+        let minLon = lons.min()!
+        let maxLon = lons.max()!
+
+        let latRange = maxLat - minLat
+        let lonRange = maxLon - minLon
+        let scale = Swift.max(latRange, lonRange)
+
+        let drawWidth = size.width - inset * 2
+        let drawHeight = size.height - inset * 2
+
+        return map { coord in
+            let x = (coord.longitude - minLon) / scale
+            let y = (coord.latitude - minLat) / scale
+
+            return CGPoint(
+                x: inset + x * drawWidth,
+                y: inset + (drawHeight - y * drawHeight)
+            )
+        }
+    }
+}
+

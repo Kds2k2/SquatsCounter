@@ -36,6 +36,6 @@ struct RouteDetailView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
-        .navigationTitle("Route Details")
+        .navigationTitle(AppString.Route.Details.title)
     }
 }

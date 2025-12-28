@@ -2,8 +2,9 @@
 //  StickFigureView.swift
 //  SquatsCounter
 //
-//  Created by Dmitro Kryzhanovsky on 10.10.2025.
+//  Created by Dmitro Kryzhanovsky on 26.12.2025.
 //
+
 
 import SwiftUI
 import Vision
@@ -24,7 +25,7 @@ struct StickFigureView: View {
                let rightKnee = bodyParts[.rightKnee],
                let rightHip = bodyParts[.rightHip],
                let root = bodyParts[.root] {
-                Stick(points: [rightAnkle.location, rightKnee.location, rightHip.location, root.location], size: size)
+                Stick(points: [rightAnkle, rightKnee, rightHip, root], size: size, name: "RL")
                     .stroke(lineWidth: 5.0)
                     .fill(Color.green)
             }
@@ -33,7 +34,7 @@ struct StickFigureView: View {
                let leftKnee = bodyParts[.leftKnee],
                let leftHip = bodyParts[.leftHip],
                let root = bodyParts[.root] {
-                Stick(points: [leftAnkle.location, leftKnee.location, leftHip.location, root.location], size: size)
+                Stick(points: [leftAnkle, leftKnee, leftHip, root], size: size, name: "LL")
                     .stroke(lineWidth: 5.0)
                     .fill(Color.green)
             }
@@ -42,7 +43,7 @@ struct StickFigureView: View {
                let rightElbow = bodyParts[.rightElbow],
                let rightShoulder = bodyParts[.rightShoulder],
                let neck = bodyParts[.neck] {
-                Stick(points: [rightWrist.location, rightElbow.location, rightShoulder.location, neck.location], size: size)
+                Stick(points: [rightWrist, rightElbow, rightShoulder, neck], size: size, name: "RH")
                     .stroke(lineWidth: 5.0)
                     .fill(Color.green)
             }
@@ -51,7 +52,7 @@ struct StickFigureView: View {
                let leftElbow = bodyParts[.leftElbow],
                let leftShoulder = bodyParts[.leftShoulder],
                let neck = bodyParts[.neck] {
-                Stick(points: [leftWrist.location, leftElbow.location, leftShoulder.location, neck.location], size: size)
+                Stick(points: [leftWrist, leftElbow, leftShoulder, neck], size: size, name: "LH")
                     .stroke(lineWidth: 5.0)
                     .fill(Color.green)
             }
@@ -59,7 +60,7 @@ struct StickFigureView: View {
             if let root = bodyParts[.root],
                let neck = bodyParts[.neck],
                let nose = bodyParts[.nose] {
-                Stick(points: [root.location, neck.location, nose.location], size: size)
+                Stick(points: [root, neck, nose], size: size, name: "ROOT")
                     .stroke(lineWidth: 5.0)
                     .fill(Color.green)
             }
@@ -68,8 +69,8 @@ struct StickFigureView: View {
 }
 
 extension StickFigureView {
-    init(postEstimator: PoseEstimator, size: CGSize) {
-        self.bodyParts = postEstimator.bodyParts
+    init(delegate: PoseEstimator, size: CGSize) {
+        self.bodyParts = delegate.bodyParts
         self.size = size
     }
 }

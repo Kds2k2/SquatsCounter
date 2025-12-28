@@ -17,19 +17,24 @@ struct RoutesListView: View {
                 Button {
                     selectedRoute = route
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(route.date.formatted(date: .abbreviated, time: .shortened))
-                            .font(.headline)
-                        
-                        Text("Distance: \(route.distance / 1000, specifier: "%.2f") km")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.secondary)
+                    HStack(spacing: 12) {
+
+                        RouteThumbnailView(route: route)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(route.date.formatted(date: .abbreviated, time: .shortened))
+                                .font(.headline)
+
+                            Text("Distance: " + route.distance.toKM)
+                                .font(.subheadline)
+                                .foregroundStyle(AppColors.secondary)
+                        }
                     }
                 }
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.background)
-            .navigationTitle("Your Routes")
+            .navigationTitle(AppString.Route.title)
             .sheet(item: $selectedRoute) { route in
                 RouteDetailView(route: route)
                     .presentationDetents([.medium, .large])

@@ -10,13 +10,6 @@ import SwiftData
 
 @main
 struct SquatsCounterApp: App {
-    private let modelContainer = ModelContainer.make()
-    
-    init() {
-        //Check normal init for DB.
-        //try? modelContainer.erase()
-    }
-    
     var body: some Scene {
         WindowGroup {
             SplashView()
@@ -24,5 +17,5 @@ struct SquatsCounterApp: App {
         }
         .modelContainer(modelContainer)
     }
-    
+    private let modelContainer = ModelContainer.make()
 }

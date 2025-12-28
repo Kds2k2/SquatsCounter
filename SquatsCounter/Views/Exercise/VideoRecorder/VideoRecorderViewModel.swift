@@ -18,7 +18,11 @@ class VideoRecorderViewModel: ObservableObject {
     var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     var rotationObservation: NSKeyValueObservation?
     
-    var delegate: AVCaptureFileOutputRecordingDelegate?
+    weak var delegate: AVCaptureFileOutputRecordingDelegate?
+    private let videoQueue = DispatchQueue(
+        label: "PatternQueue",
+        qos: .userInteractive
+    )
     
     @Published var isRecording: Bool = false
     
@@ -82,13 +86,18 @@ class VideoRecorderViewModel: ObservableObject {
         if FileManager.default.fileExists(atPath: url.path) {
             try? FileManager.default.removeItem(at: url)
         }
-        captureMovieFileOutput.startRecording(to: url, recordingDelegate: delegate)
+        
+        videoQueue.async {
+            self.captureMovieFileOutput.startRecording(to: url, recordingDelegate: delegate)
+        }
         isRecording = true
     }
 
     func stopRecording() {
-        LogManager.shared.debug("Stop recording.")
-        captureMovieFileOutput.stopRecording()
+        videoQueue.async {
+            LogManager.shared.debug("Stop recording.")
+            self.captureMovieFileOutput.stopRecording()
+        }
         isRecording = false
     }
 }

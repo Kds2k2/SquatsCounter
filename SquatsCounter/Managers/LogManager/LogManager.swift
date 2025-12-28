@@ -28,7 +28,7 @@ final class LogManager {
         line: Int = #line,
         function: String = #function
     ) {
-#if DEBUG
+//#if DEBUG
         let message = items
             .map { String(describing: $0) }
             .joined(separator: " ")
@@ -37,7 +37,7 @@ final class LogManager {
             level: level.osLogType,
             "<- LOG [\(level.prefix)] \(file):\(line) \(function)\n\(message) ->"
         )
-#endif
+//#endif
     }
 }
 

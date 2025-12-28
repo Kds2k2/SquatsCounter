@@ -1,5 +1,5 @@
 //
-//  FrontCameraView.swift
+//  ExerciseCameraView.swift
 //  SquatsCounter
 //
 //  Created by Dmitro Kryzhanovsky on 10.10.2025.
@@ -7,19 +7,19 @@
 
 import SwiftUI
 
-struct FrontCameraView: View {
+struct ExerciseCameraView: View {
     
-    init(poseEstimator: PoseEstimator) {
-        self.poseEstimator = poseEstimator
-        self.viewModel = .init(self.poseEstimator)
+    init(delegate: PoseEstimator) {
+        self.delegate = delegate
+        self.viewModel = .init(self.delegate)
     }
     
-    @ObservedObject var viewModel: FrontContentViewModel
-    var poseEstimator: PoseEstimator
+    var viewModel: ExerciseCameraViewModel
+    var delegate: PoseEstimator
     
     var body: some View {
         ZStack {
-            FrontCameraPreviewView(previewLayer: viewModel.frontPreviewLayer)
+            ExerciseCameraPreviewView(session: viewModel.captureSession)
                 .onAppear {
                     Task.detached {
                         await viewModel.captureSession.startRunning()

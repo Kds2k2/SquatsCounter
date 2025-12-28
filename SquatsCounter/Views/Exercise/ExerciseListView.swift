@@ -36,6 +36,7 @@ struct ExerciseListView: View {
                         } label: {
                             Text("Add Exercise")
                                 .font(.headline)
+                                .foregroundStyle(AppColors.background)
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 12)
                         }

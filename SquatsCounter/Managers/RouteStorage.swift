@@ -10,18 +10,15 @@ import Combine
 
 final class RouteStorage: ObservableObject {
     static let shared = RouteStorage()
-    private let filename = "saved_routes.json"
+    @Published private(set) var routes: [JoggingRoute] = []
     
+    private let filename = "saved_routes.json"
     private var fileURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(filename)
     }
-    
-    @Published private(set) var routes: [JoggingRoute] = []
 
-    init() {
-        load()
-    }
+    private init() { load() }
 
     func save(_ route: JoggingRoute) {
         routes.append(route)
@@ -33,7 +30,7 @@ final class RouteStorage: ObservableObject {
             let data = try JSONEncoder().encode(routes)
             try data.write(to: fileURL)
         } catch {
-            print("❌ Failed to save routes: \(error)")
+            LogManager.shared.error("Failed to save routes: \(error)")
         }
     }
 
@@ -42,7 +39,7 @@ final class RouteStorage: ObservableObject {
         do {
             routes = try JSONDecoder().decode([JoggingRoute].self, from: data)
         } catch {
-            print("❌ Failed to load routes: \(error)")
+            LogManager.shared.error("Failed to load routes: \(error)")
         }
     }
 }

@@ -14,9 +14,9 @@ extension CGFloat {
         case 90:
             return .up
         case 0:
-            return .left
+            return .right
         case 180:
-            return .up
+            return .leftMirrored
         default:
             return .right
         }

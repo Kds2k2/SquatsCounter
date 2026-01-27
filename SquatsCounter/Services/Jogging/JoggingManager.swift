@@ -8,7 +8,8 @@
 import SwiftUI
 import CoreLocation
 
-class JoggingManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+@MainActor
+class JoggingManager: NSObject, ObservableObject, @MainActor CLLocationManagerDelegate {
     @Published var distance: Double = 0.0
     @Published var isStart: Bool = false
     @Published var routeCoordinates: [CLLocationCoordinate2D] = []

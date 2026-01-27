@@ -9,13 +9,16 @@ import Vision
 import SwiftUI
 import Combine
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 
-class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, ObservableObject {
+class PoseEstimator: NSObject, @MainActor AVCaptureVideoDataOutputSampleBufferDelegate, ObservableObject {
     
     private let sequenceHandler = VNSequenceRequestHandler()
     @Published var bodyParts: [VNHumanBodyPoseObservation.JointName : VNRecognizedPoint] = [:]
     @Published var count: Int = 0
+    
+    @Published var isBodyPose: Bool = false
+    @Published var isBodyParts: Bool = false
     
     private var exercisePattern: ExercisePattern
     
@@ -41,7 +44,7 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
             .store(in: &subscriptions)
     }
     
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    @MainActor func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let request = VNDetectHumanBodyPoseRequest(completionHandler: handler)
         
         do {
@@ -51,7 +54,7 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         }
     }
     
-    func handler(request: VNRequest, error: Error?) {
+    @MainActor func handler(request: VNRequest, error: Error?) {
         guard error == nil else {
             LogManager.shared.error("Some error: \(error!.localizedDescription)")
             return
@@ -59,16 +62,17 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
         
         guard !isPaused else { return }
         
-        // Make state
         guard let bodyPoseResults = request.results as? [VNHumanBodyPoseObservation] else {
-            //LogManager.shared.warn("Body pose results == nil")
+            self.isBodyPose = false
             return
         }
-        // Make state
+        self.isBodyPose = true
+        
         guard let bodyParts = try? bodyPoseResults.first?.recognizedPoints(.all) else {
-            //LogManager.shared.warn("Body parts == nil")
+            self.isBodyParts = false
             return
         }
+        self.isBodyParts = true
         
         DispatchQueue.main.async {
             self.bodyParts = bodyParts
@@ -170,14 +174,14 @@ class PoseEstimator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, Obs
     }
     
     @inline(__always)
-    func isLess(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
+    private func isLess(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
         guard let target else { return true }
         guard let current else { return false }
         return current < target + tolerance
     }
 
     @inline(__always)
-    func isGreater(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
+    private func isGreater(_ current: CGFloat?, than target: CGFloat?, tolerance: CGFloat) -> Bool {
         guard let target else { return true }
         guard let current else { return false }
         return current > target - tolerance

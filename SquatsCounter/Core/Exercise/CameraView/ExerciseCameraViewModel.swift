@@ -9,6 +9,8 @@ import SwiftUI
 import Foundation
 import AVFoundation
 
+@MainActor
+@Observable
 class ExerciseCameraViewModel {
     var captureSession: AVCaptureSession = .init()
     var captureVideoDataOutput: AVCaptureVideoDataOutput = .init()

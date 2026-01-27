@@ -36,7 +36,7 @@ extension Array where Element == Coordinate2D {
         return coordinates
     }
 }
-
+// swiftlint:disable identifier_name
 extension Array where Element == Coordinate2D {
 
     func normalizedPoints(in size: CGSize, inset: CGFloat = 10) -> [CGPoint] {
@@ -68,4 +68,3 @@ extension Array where Element == Coordinate2D {
         }
     }
 }
-

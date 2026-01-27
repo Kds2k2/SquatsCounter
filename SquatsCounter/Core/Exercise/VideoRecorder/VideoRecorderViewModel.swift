@@ -8,8 +8,9 @@
 import Photos
 import SwiftUI
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 
+@MainActor
 class VideoRecorderViewModel: ObservableObject {
     var captureSession: AVCaptureSession = .init()
     var captureMovieFileOutput: AVCaptureMovieFileOutput = .init()

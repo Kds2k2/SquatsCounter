@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 
+@MainActor
 final class RouteStorage: ObservableObject {
     static let shared = RouteStorage()
     @Published private(set) var routes: [JoggingRoute] = []

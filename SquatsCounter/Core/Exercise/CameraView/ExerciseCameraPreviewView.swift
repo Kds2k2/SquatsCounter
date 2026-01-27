@@ -7,7 +7,7 @@
 
 import UIKit
 import SwiftUI
-import AVFoundation
+@preconcurrency import AVFoundation
 
 struct ExerciseCameraPreviewView: UIViewRepresentable {
 
@@ -29,6 +29,7 @@ struct ExerciseCameraPreviewView: UIViewRepresentable {
             AVCaptureVideoPreviewLayer.self
         }
 
+        // swiftlint: disable force_cast
         var previewLayer: AVCaptureVideoPreviewLayer {
             layer as! AVCaptureVideoPreviewLayer
         }

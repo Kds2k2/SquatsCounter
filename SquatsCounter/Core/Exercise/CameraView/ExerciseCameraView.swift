@@ -21,13 +21,13 @@ struct ExerciseCameraView: View {
         ZStack {
             ExerciseCameraPreviewView(session: viewModel.captureSession)
                 .onAppear {
-                    Task.detached {
-                        await viewModel.captureSession.startRunning()
+                    Task {
+                        viewModel.captureSession.startRunning()
                     }
                 }
                 .onDisappear {
-                    Task.detached {
-                        await viewModel.captureSession.stopRunning()
+                    Task {
+                        viewModel.captureSession.stopRunning()
                     }
                 }
         }

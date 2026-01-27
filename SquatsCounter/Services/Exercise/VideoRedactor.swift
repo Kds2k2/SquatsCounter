@@ -11,7 +11,8 @@ import Foundation
 import Vision
 import Combine
 
-class VideoRedactor: NSObject, AVCaptureFileOutputRecordingDelegate, ObservableObject {
+@MainActor
+class VideoRedactor: NSObject, @MainActor AVCaptureFileOutputRecordingDelegate, ObservableObject {
     
     @Published var videoURL: URL?
     

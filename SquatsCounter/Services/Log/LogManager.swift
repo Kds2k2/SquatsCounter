@@ -8,10 +8,10 @@
 import SwiftUI
 import OSLog
 
+@Observable
+@MainActor
 final class LogManager {
-
     static let shared = LogManager()
-
     private let logger: Logger
 
     private init() {

@@ -18,8 +18,8 @@ struct RouteThumbnailView: View {
 
             var path = Path()
             path.move(to: first)
-            for p in points.dropFirst() {
-                path.addLine(to: p)
+            for point in points.dropFirst() {
+                path.addLine(to: point)
             }
 
             context.stroke(path, with: .color(.blue), lineWidth: 2)

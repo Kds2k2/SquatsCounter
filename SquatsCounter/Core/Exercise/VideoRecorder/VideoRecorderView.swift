@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 
+@MainActor
 struct VideoRecorderView: View {
     
     @ObservedObject var viewModel: VideoRecorderViewModel
@@ -23,14 +24,14 @@ struct VideoRecorderView: View {
             VideoRecorderPreviewView(previewLayer: viewModel.frontPreviewLayer)
                 .onAppear {
                     LogManager.shared.debug("Task to start running.")
-                    Task.detached {
-                        await viewModel.captureSession.startRunning()
+                    Task {
+                        viewModel.captureSession.startRunning()
                     }
                 }
                 .onDisappear {
                     LogManager.shared.debug("Task to stop running.")
-                    Task.detached {
-                        await viewModel.captureSession.stopRunning()
+                    Task {
+                        viewModel.captureSession.stopRunning()
                     }
                 }
             

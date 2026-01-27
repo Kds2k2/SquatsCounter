@@ -58,7 +58,7 @@ struct JoggingView: View {
                         .edgesIgnoringSafeArea(.all)
                         .frame(height: 300)
                     
-                    BottomView()
+                    bottomView()
                 }
             }
         }
@@ -76,8 +76,9 @@ struct JoggingView: View {
         }
     }
 
+    // swiftlint:disable function_body_length
     @ViewBuilder
-    func BottomView() -> some View {
+    func bottomView() -> some View {
         VStack(spacing: 15) {
             HStack(spacing: 10) {
                 Button(action: {

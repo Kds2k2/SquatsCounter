@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 final class DailyResetManager {
     static let shared = DailyResetManager()
     private let key = "lastResetDate"
